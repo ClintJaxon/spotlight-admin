@@ -229,7 +229,7 @@ function grp(si,id,s){const all=Object.keys(S.shows[si].seats).filter(k=>S.shows
   if(sh.closed.has(T))return head+"Table is closed for this show.";
   if(s.st==="avail")return head+"Open seat.";
   if(s.st==="held"){const g=s.guest;const m=Math.max(1,Math.ceil((s.exp-Date.now())/60000));return head+`<b>HELD, not paid</b> - about ${m} min left`+(s.by==="me"?"<br>In the order being taken now.":g?`<br>${g.name}<br>${g.phone}<br>${g.email}`:"<br>Guest hasn't entered details yet.")}
-  const g=s.guest;return head+`<b style="font-size:20px">${g.name}</b><br>${DOOR?'':g.phone+'<br>'+g.email+'<br>'}${grp(si,id,s)}Order ${s.order} - ${s.st==="cash"?"<b>CASH, not yet received</b>":"paid by card"}`}
+  const g=s.guest;return head+`<b style="font-size:20px">${g.name}</b><br>${DOOR?'':g.phone+'<br>'+g.email+'<br>'}${grp(si,id,s)}Order ${s.order} - ${s.st==="cash"?"<b>CASH, not yet received</b>":(s.tender==="card"?"paid by card":"paid in cash")}`}
  document.addEventListener("pointerover",e=>{if(S.view!=="admin"||S.drag)return;const c=e.target.closest&&e.target.closest("circle.seat");if(!c||!c.dataset.id){return}
   if(cur===c)return;hide();cur=c;const x=e.clientX,y=e.clientY;
   tm=setTimeout(()=>{if(!tip){tip=document.createElement("div");tip.style.cssText="position:fixed;z-index:60;max-width:300px;background:#fffbe6;border:3px solid #1d1a16;border-radius:12px;padding:10px 14px;font:16px/1.4 system-ui,Arial,sans-serif;color:#1d1a16;box-shadow:0 6px 18px rgba(0,0,0,.35);pointer-events:none;display:none";document.body.appendChild(tip)}
@@ -246,7 +246,7 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
   info.innerHTML=`<b>${S.sel.seat}</b> (${NAME[S.sel.seat.split("-")[0]]}) - ${SHOWS[S.sel.show][1]}<br><b>HELD, not paid yet</b> - hold ends in about ${mins} min<br>`+(s.by==="me"?"In your current order (the form on the right).":(g0?`${g0.name}<br>${DOOR?'':g0.phone+'<br>'+g0.email+'<br>'}<span class="small">Guest is checking out. If they don't pay in time the seat opens up again by itself.</span>`:"A guest is checking out and hasn't entered their details yet."));
   if(s.by!=="me"){const x=document.createElement("button");x.textContent="Release this hold";x.onclick=()=>{delete S.shows[S.sel.show].seats[S.sel.seat];log("Released hold on "+S.sel.seat+" ("+SHOWS[S.sel.show][0]+")"+(g0?" held by "+g0.name:""));S.sel=null;render()};b.appendChild(x)}
   return}
- const g=s.guest;info.innerHTML=`<b>${S.sel.seat}</b> (${NAME[S.sel.seat.split("-")[0]]}) - ${SHOWS[S.sel.show][1]}<br>${g.name}<br>${g.phone}<br>${g.email}<br>${grp(S.sel.show,S.sel.seat,s)}Order ${s.order} - ${s.st==="cash"?"<b>CASH, not yet received</b>":"paid by card (card details stored encrypted, never shown)"}`;
+ const g=s.guest;info.innerHTML=`<b>${S.sel.seat}</b> (${NAME[S.sel.seat.split("-")[0]]}) - ${SHOWS[S.sel.show][1]}<br>${g.name}<br>${g.phone}<br>${g.email}<br>${grp(S.sel.show,S.sel.seat,s)}Order ${s.order} - ${s.st==="cash"?"<b>CASH, not yet received</b>":(s.tender==="card"?"paid by card (card details stored encrypted, never shown)":"paid in cash")}`;
  const mk=(t,f,c)=>{const x=document.createElement("button");x.textContent=t;if(c)x.className=c;x.onclick=f;b.appendChild(x)};
  const ordIds=Object.keys(S.shows[S.sel.show].seats).filter(k=>S.shows[S.sel.show].seats[k].order===s.order),amt=ordIds.length*PRICE;
  if(S.ask&&S.ask.seat===S.sel.seat&&S.ask.show===S.sel.show){
