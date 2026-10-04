@@ -219,7 +219,7 @@ document.getElementById("pay").onclick=()=>{
  const cash=S.view==="admin"&&tender.value==="cash";const order="O"+(1004+Math.floor(Math.random()*900));
  S.cart.forEach(i=>{sell(i.show,i.seat,g,cash?"cash":"sold",cash?"cash":"card",order);addCust(g,i.show)});
  log(`Order ${order}: ${S.cart.length} seats for ${g.name} - ${cash?"CASH, held until paid":"paid by card"}`);
- toast(cash?"Seats held. They turn to sold when you confirm the cash.":"Paid (demo). Seats are sold.");S.cart=[];if(M.open)closeModal();else render()};
+ toast(cash?"Seats held. They turn to sold when you confirm the cash.":"Paid (demo). Seats are sold.");S.cart=[];clearForm();if(M.open)closeModal();else render()};
 // ---- admin panel
 function grp(si,id,s){const all=Object.keys(S.shows[si].seats).filter(k=>S.shows[si].seats[k].order===s.order).sort();if(all.length<2)return "Party of 1<br>";const n=all.indexOf(id)+1;return `<b>Seat ${n} of ${all.length}</b> in this party. Other seats: ${all.filter(k=>k!==id).join(", ")}<br>`}
 // ---- hover balloon (Debbie): rest on a seat for 1 second
@@ -369,7 +369,7 @@ if(window.ResizeObserver){new ResizeObserver(sync).observe(mc)}window.addEventLi
 
 (function(){const vP=document.createElement("button");vP.id="vPos";vP.textContent="POS View";const wrap=document.createElement("span");wrap.id="viewSw";wrap.style.cssText="display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:8px;vertical-align:middle";document.getElementById("show").insertAdjacentElement("afterend",wrap);[vAdmin,vP,vGuest].forEach(b=>{b.style.cssText="padding:8px 12px;font-size:16px;border:2px solid #222;border-radius:8px";wrap.appendChild(b)});vAdmin.textContent="Debbie's View";vGuest.textContent="Guest View";
 let REAL=false;
-function mode(m){DOOR=(m==="pos")||REAL;document.body.classList.toggle("door",DOOR);setView(m==="guest"?"guest":"admin");[["vAdmin","admin"],["vPos","pos"],["vGuest","guest"]].forEach(([i,k])=>document.getElementById(i).className=k===m?"on":"");S.sel=null;render()}
+function mode(m){DOOR=(m==="pos")||REAL;document.body.classList.toggle("door",DOOR);setView(m==="guest"?"guest":"admin");[["vAdmin","admin"],["vPos","pos"],["vGuest","guest"]].forEach(([i,k])=>document.getElementById(i).className=k===m?"on":"");S.sel=null;S.cart=[];clearForm();render()}function clearForm(){["fn","fp","fe","fw","fa"].forEach(i=>{var e=document.getElementById(i);if(e)e.value=""});var h=document.getElementById("fh");if(h)h.value="";var f=document.getElementById("form");if(f)f.style.display="none"}
 vAdmin.onclick=()=>mode("admin");vP.onclick=()=>mode("pos");vGuest.onclick=()=>mode("guest");
 const _ar=applyRole;applyRole=async function(){await _ar();REAL=DOOR;wrap.style.display=REAL?"none":"inline-flex";vAdmin.style.display="";vP.style.display="";vGuest.style.display="";if(!REAL)mode("admin")};
 })();
