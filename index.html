@@ -22,7 +22,7 @@ main>section,aside{min-width:0}main{display:grid;grid-template-columns:minmax(0,
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
 table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #ccc;padding:3px 4px;text-align:left}
 .log{font-size:13px;max-height:170px;overflow:auto}.log div{border-bottom:1px solid #eee;padding:2px 0}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1d1a16;color:#fff;padding:12px 18px;border-radius:10px;display:none;z-index:9;max-width:90%}
+#toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#c0392b;color:#fff;padding:16px 24px;border-radius:12px;display:none;z-index:2147483000;max-width:90%;font-size:22px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.45)}
 #ghost{position:fixed;pointer-events:none;z-index:30;background:var(--sold);color:#fff;border:3px solid #2f7bff;border-radius:10px;padding:4px 10px;display:none;font-size:15px}
 label{display:block;font-size:15px;margin-top:6px}input,aside select{width:100%;min-width:0}
 h3{margin:4px 0 6px}.small{font-size:14px;color:#555}
@@ -212,7 +212,7 @@ function renderCart(){const c=document.getElementById("cart");const by={};S.cart
 document.getElementById("more").onchange=e=>{if(e.target.value!==""){S.show=+e.target.value;document.getElementById("show").value=S.show;e.target.value="";render()}};
 document.getElementById("pay").onclick=()=>{
  const g={name:fn.value.trim(),phone:fp.value.trim(),email:fe.value.trim(),how:fh.value,where:fw.value.trim(),away:fa.value.trim()};
- if(!g.name||!g.phone||!/.+@.+\..+/.test(g.email)){toast("Name, phone and a valid email are required.");return}
+ ["fn","fp","fe"].forEach(i=>{document.getElementById(i).style.outline=""});if(!g.name||!g.phone||!/.+@.+\..+/.test(g.email)){const bad=[!g.name&&"fn",!g.phone&&"fp",!/.+@.+\..+/.test(g.email)&&"fe"].filter(Boolean);bad.forEach(i=>document.getElementById(i).style.outline="4px solid #c0392b");const fe0=document.getElementById(bad[0]);try{fe0.scrollIntoView({block:"center"});fe0.focus()}catch(e){}toast("Please fill in: "+bad.map(i=>({fn:"Name",fp:"Phone",fe:"a valid Email"})[i]).join(", "));return}
  if(!S.cart.length){toast("Pick at least one open seat first.");return}
  // conflict check: every seat still held by me and not expired
  for(const i of S.cart){const s=S.shows[i.show].seats[i.seat];if(!s||s.st!=="held"||s.by!=="me"){toast("Seat "+i.seat+" is no longer held. Please pick again.");S.cart=S.cart.filter(x=>x!==i);render();return}}
