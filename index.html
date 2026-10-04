@@ -360,4 +360,9 @@ async function applyRole(){try{const u=await(await sfetch(SB+"/auth/v1/user",{he
 document.getElementById("ivGo").onclick=async()=>{const m=document.getElementById("ivMsg"),em=document.getElementById("ivEm").value.trim();if(!em){m.textContent="Type their email first.";return}m.textContent="Sending...";try{const r=await sfetch(SB+"/functions/v1/invite-user",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+TOK,"Content-Type":"application/json"},body:JSON.stringify({email:em,name:document.getElementById("ivNm").value.trim(),role:document.getElementById("ivRole").value})});const j=await r.json();if(!r.ok)throw new Error(j.error||"Could not send");m.textContent="Invitation sent to "+em+".";document.getElementById("ivEm").value="";document.getElementById("ivNm").value=""}catch(e){m.textContent="Could not send: "+e.message}};
 
 document.getElementById("lgGo").onclick=doLogin;document.getElementById("lgPw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
+
+(function(){const mc=document.getElementById("map").closest(".card"),lc=document.getElementById("log").closest(".card"),cust=document.getElementById("cust"),cc=cust.closest(".card"),w=cust.parentNode;
+mc.parentNode.appendChild(lc);lc.style.marginTop="12px";
+function sync(){if(!cc.offsetParent||!mc.offsetHeight)return;if(window.innerWidth<=900){w.style.maxHeight="360px";return}w.style.maxHeight="0px";const others=cc.offsetHeight;w.style.maxHeight=Math.max(120,mc.offsetHeight-others)+"px"}
+if(window.ResizeObserver){new ResizeObserver(sync).observe(mc)}window.addEventListener("resize",sync);setInterval(sync,1500);sync()})();
 </script></body></html>
