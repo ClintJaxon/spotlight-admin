@@ -49,9 +49,10 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
  <div class="card">
   <div class="row"><label style="margin:0">Show:</label><select id="show"></select>
    <span id="admTools" style="display:none" class="row">
+    <button id="tmode">Switch single tables ON/OFF: off</button>
     <button id="cl">Close/open wings:</button>
     <button data-w="L">Left</button><button data-w="C">Center</button><button data-w="R">Right</button>
-    <span style="flex-basis:100%;height:0"></span><button id="tmode">Switch single tables ON/OFF: off</button><span class="small">(turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
+    <span style="flex-basis:100%;height:0"></span><span class="small">(Single tables: turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
   <div class="legend"><span><i style="background:var(--avail)"></i>Available</span><span><i style="background:var(--sel)"></i>Yours (selected)</span><span><i style="background:var(--held)"></i>Held by someone (15 min)</span><span id="lgCash"><i style="background:var(--cash)"></i>Cash - waiting for payment</span><span><i style="background:var(--sold)"></i>Sold (dark + X)</span><span><i style="background:#cfc8b5"></i>Table closed</span></div>
   <div class="mapwrap"><svg id="map" viewBox="0 40 1000 700"></svg></div>
   <div class="small" id="hint"></div>
