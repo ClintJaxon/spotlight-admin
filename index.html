@@ -367,10 +367,10 @@ mc.parentNode.appendChild(lc);lc.style.marginTop="12px";
 function sync(){if(!cc.offsetParent||!mc.offsetHeight)return;if(window.innerWidth<=900){w.style.maxHeight="360px";return}w.style.maxHeight="0px";const others=cc.offsetHeight;w.style.maxHeight=Math.max(120,mc.offsetHeight-others)+"px"}
 if(window.ResizeObserver){new ResizeObserver(sync).observe(mc)}window.addEventListener("resize",sync);setInterval(sync,1500);sync()})();
 
-(function(){const vP=document.createElement("button");vP.id="vPos";vP.textContent="POS view";vGuest.parentNode.insertBefore(vP,vGuest);vAdmin.textContent="Admin view";vGuest.textContent="Guest view";
+(function(){const vP=document.createElement("button");vP.id="vPos";vP.textContent="POS View";const wrap=document.createElement("span");wrap.id="viewSw";wrap.style.cssText="display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:8px;vertical-align:middle";document.getElementById("show").insertAdjacentElement("afterend",wrap);[vAdmin,vP,vGuest].forEach(b=>{b.style.cssText="padding:8px 12px;font-size:16px;border:2px solid #222;border-radius:8px";wrap.appendChild(b)});vAdmin.textContent="Debbie's View";vGuest.textContent="Guest View";
 let REAL=false;
 function mode(m){DOOR=(m==="pos")||REAL;document.body.classList.toggle("door",DOOR);setView(m==="guest"?"guest":"admin");[["vAdmin","admin"],["vPos","pos"],["vGuest","guest"]].forEach(([i,k])=>document.getElementById(i).className=k===m?"on":"");S.sel=null;render()}
 vAdmin.onclick=()=>mode("admin");vP.onclick=()=>mode("pos");vGuest.onclick=()=>mode("guest");
-const _ar=applyRole;applyRole=async function(){await _ar();REAL=DOOR;const vis=REAL?"none":"";vAdmin.style.display=vis;vP.style.display=vis;vGuest.style.display=vis;if(!REAL)mode("admin")};
+const _ar=applyRole;applyRole=async function(){await _ar();REAL=DOOR;wrap.style.display=REAL?"none":"inline-flex";vAdmin.style.display="";vP.style.display="";vGuest.style.display="";if(!REAL)mode("admin")};
 })();
 </script></body></html>
