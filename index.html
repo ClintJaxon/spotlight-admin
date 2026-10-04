@@ -366,4 +366,11 @@ document.getElementById("lgGo").onclick=doLogin;document.getElementById("lgPw").
 mc.parentNode.appendChild(lc);lc.style.marginTop="12px";
 function sync(){if(!cc.offsetParent||!mc.offsetHeight)return;if(window.innerWidth<=900){w.style.maxHeight="360px";return}w.style.maxHeight="0px";const others=cc.offsetHeight;w.style.maxHeight=Math.max(120,mc.offsetHeight-others)+"px"}
 if(window.ResizeObserver){new ResizeObserver(sync).observe(mc)}window.addEventListener("resize",sync);setInterval(sync,1500);sync()})();
+
+(function(){const vP=document.createElement("button");vP.id="vPos";vP.textContent="POS view";vGuest.parentNode.insertBefore(vP,vGuest);vAdmin.textContent="Admin view";vGuest.textContent="Guest view";
+let REAL=false;
+function mode(m){DOOR=(m==="pos")||REAL;document.body.classList.toggle("door",DOOR);setView(m==="guest"?"guest":"admin");[["vAdmin","admin"],["vPos","pos"],["vGuest","guest"]].forEach(([i,k])=>document.getElementById(i).className=k===m?"on":"");S.sel=null;render()}
+vAdmin.onclick=()=>mode("admin");vP.onclick=()=>mode("pos");vGuest.onclick=()=>mode("guest");
+const _ar=applyRole;applyRole=async function(){await _ar();REAL=DOOR;const vis=REAL?"none":"";vAdmin.style.display=vis;vP.style.display=vis;vGuest.style.display=vis;if(!REAL)mode("admin")};
+})();
 </script></body></html>
