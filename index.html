@@ -110,7 +110,7 @@ const NS="http://www.w3.org/2000/svg";
 function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e}
 function render(){
  const si=S.show,sh=S.shows[si],svg=document.getElementById("map");svg.innerHTML="";
- el("rect",{x:345,y:170,width:310,height:150,rx:8,fill:"#6b6350"},svg);[[40,"L"],[650,"R"]].forEach(([x])=>{el("rect",{x:x,y:60,width:310,height:36,rx:8,fill:"#6b6350"},svg);const t=el("text",{x:x+155,y:85,class:"room",fill:"#fff",style:"fill:#fff"},svg);t.textContent="SCREENS"});
+ el("rect",{x:345,y:170,width:310,height:150,rx:8,fill:"#6b6350"},svg);[40,205,650,815].forEach((x,i)=>{el("rect",{x:x,y:60,width:145,height:36,rx:8,fill:"#6b6350"},svg);const t=el("text",{x:x+72.5,y:85,class:"room",fill:"#fff",style:"fill:#fff"},svg);t.textContent="Screen "+(i+1)});
  const st=el("text",{x:500,y:253,class:"room",fill:"#fff",style:"fill:#fff"},svg);st.textContent="STAGE";
  TABLES.forEach(T=>{const closed=sh.closed.has(T.id);
   const g=el("g",{transform:`translate(${T.x},${T.y}) rotate(${T.rot})`},svg);
