@@ -54,7 +54,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
     <button data-w="L">Left</button><button data-w="C">Center</button><button data-w="R">Right</button>
     <span style="flex-basis:100%;height:0"></span><span class="small">(Single tables: turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
   <div class="legend"><span><i style="background:var(--avail)"></i>Available</span><span><i style="background:var(--sel)"></i>Yours (selected)</span><span><i style="background:var(--held)"></i>Held by someone (15 min)</span><span id="lgCash"><i style="background:var(--cash)"></i>Cash - waiting for payment</span><span><i style="background:var(--sold)"></i>Sold (dark + X)</span><span><i style="background:#cfc8b5"></i>Table closed</span></div>
-  <div class="mapwrap"><svg id="map" viewBox="0 40 1000 700"></svg></div>
+  <div class="mapwrap"><svg id="map" viewBox="-20 40 1040 700"></svg></div>
   <div class="small" id="hint"></div>
  </div>
 </section>
@@ -82,18 +82,16 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
 const SHOWS=[["2026-12-16","A Country Christmas"],["2026-12-23","A Country Christmas"],["2027-01-13","Conway Twitty"],["2027-01-20","Charley Pride"],["2027-01-27","George Jones"],["2027-02-03","Pioneers & Legends"],["2027-02-10","Don Williams"],["2027-02-17","Johnny Cash"],["2027-02-24","Keith Whitley"],["2027-03-03","Merle Haggard"],["2027-03-10","Ray Price"],["2027-03-17","Marty Robbins"],["2027-03-24","Buck Owens"],["2027-03-31","Jim Reeves"]];
 const PRICE=35,HOLD=15*60*1000;
 const fmt=d=>new Date(d+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
-// ---- room geometry: 27 tables. L1-9, C1-9, R1-9; 3 rows x 3 cols per block; wings angled 45deg
+// ---- room geometry: 27 tables. L1-6 (2 per row), C1-12 (4 per row), R1-9 (3 per row); wings angled 45deg
 const TABLES=[];
 (function(){const rowY=[420,540,660],wY=[390,530,670];
- for(let r=0;r<3;r++)for(let j=0;j<3;j++){
-  // center block straight row
-  TABLES.push({id:"C"+(r*3+j+1),w:"C",x:390+j*110,y:rowY[r],rot:0});
-  // wings: col j=0 nearest center, outer columns step along 45deg toward stage
-  TABLES.push({id:"L"+(r*3+j+1),w:"L",x:268-j*95,y:wY[r]-j*95,rot:45});
-  TABLES.push({id:"R"+(r*3+j+1),w:"R",x:732+j*95,y:wY[r]-j*95,rot:-45});}
+ for(let r=0;r<3;r++){
+  for(let j=0;j<4;j++)TABLES.push({id:"C"+(r*4+j+1),w:"C",x:350+j*100,y:rowY[r],rot:0});
+  for(let j=0;j<2;j++)TABLES.push({id:"L"+(r*2+j+1),w:"L",x:225-j*90,y:wY[r]-j*90,rot:45});
+  for(let j=0;j<3;j++)TABLES.push({id:"R"+(r*3+j+1),w:"R",x:775+j*90,y:wY[r]-j*90,rot:-45});}
  const ord={L:0,C:1,R:2};TABLES.sort((a,b)=>ord[a.w]-ord[b.w]||(+a.id.slice(1))-(+b.id.slice(1)));})();
 const ROWS=["Bill Monroe|Chet Atkins|Ernest Tubb|Glen Campbell|Jimmy Rodgers|Little Jimmy Dickens|Patsy Cline|Roger Miller|Tanya Tucker","Bob Wills|Dolly Parton|Garth Brooks|Grandpa Jones|Kitty Wells|Loretta Lynn|Reba McEntire|Roy Acuff|Tex Ritter","Brenda Lee|Eddy Arnold|Gene Autry|Hank Williams|Lefty Frizzell|Minnie Pearl|Red Foley|Tammy Wynette|Willie Nelson"].map(x=>x.split("|"));
-const NAME={};(function(){for(let r=0;r<3;r++)for(let j=0;j<3;j++){NAME["L"+(r*3+j+1)]=ROWS[r][2-j];NAME["C"+(r*3+j+1)]=ROWS[r][3+j];NAME["R"+(r*3+j+1)]=ROWS[r][6+j];}})();
+const NAME={};(function(){for(let r=0;r<3;r++){for(let j=0;j<2;j++)NAME["L"+(r*2+j+1)]=ROWS[r][1-j];for(let j=0;j<4;j++)NAME["C"+(r*4+j+1)]=ROWS[r][2+j];for(let j=0;j<3;j++)NAME["R"+(r*3+j+1)]=ROWS[r][6+j];}})();
 const tlabel=id=>S.view==="admin"?id:NAME[id];
 const seatsOf=t=>[1,2,3,4,5,6,7,8].map(n=>t+"-"+n);
 // ---- state
@@ -122,7 +120,7 @@ function render(){
    lab.setAttribute("style","font-size:11.5px");lab.setAttribute("y",-1);const t1=el("tspan",{x:0,dy:0},lab);t1.textContent=a;const t2=el("tspan",{x:0,dy:12},lab);t2.textContent=b;
    if(!closed){g.style.cursor="pointer";el("rect",{x:-48,y:-18,width:96,height:36,fill:"transparent"},g).addEventListener("click",()=>openTable(T.id))}}
   
-  for(let n=1;n<=8;n++){const top=n>=5;const k=top?n-5:n-1;const cx=-36+k*24,cy=top?-33:33;
+  for(let n=1;n<=8;n++){const top=n>=5;const k=top?8-n:n-1;const cx=-36+k*24,cy=top?-33:33;
    const id=T.id+"-"+n,s=seatState(si,id);
    let cls="avail";if(closed)cls="closed";else if(s.st==="sold")cls="sold";else if(s.st==="cash")cls=S.view==="admin"?"cash":"sold";
    else if(s.st==="held")cls=s.by==="me"?"mine":"held";
@@ -182,7 +180,7 @@ function renderModal(){const si=S.show,L=document.getElementById("mLeft");const 
   const TT=TABLES.find(x=>x.id===t);const vx=500-TT.x,vy=245-TT.y,a=TT.rot*Math.PI/180;const ly=-vx*Math.sin(a)+vy*Math.cos(a),lx=vx*Math.cos(a)+vy*Math.sin(a);const stTop=ly<0;let arrDeg=Math.atan2(ly,lx)*180/Math.PI+90;arrDeg=Math.atan2(245-TT.y,500-TT.x)*180/Math.PI+90;if(arrDeg>180)arrDeg-=360;arrDeg=Math.max(-90,Math.min(90,arrDeg));
   const sy=stTop?-46:346;el("rect",{x:60,y:sy,width:440,height:36,rx:8,fill:"#6b6350"},svg);const stx=el("text",{x:280,y:sy+25,style:"font:700 22px system-ui;text-anchor:middle;fill:#fff;letter-spacing:3px"},svg);stx.textContent="STAGE IS THIS WAY";[75,485].forEach(ax=>el("polygon",{points:"0,-16 15,-1 6,-1 6,16 -6,16 -6,-1 -15,-1",fill:"#fff",transform:`translate(${ax},${sy+18}) rotate(${arrDeg})`},svg));
   el("rect",{x:60,y:110,width:440,height:110,rx:20,class:"tbl"},svg);const lt=el("text",{x:280,y:172,class:"tlab",style:"font-size:28px"},svg);lt.textContent=(S.view==="admin"?t+"  ":"")+NAME[t];
-  for(let n=1;n<=8;n++){const top=n>=5,k=top?n-5:n-1,cx=105+k*117,cy=top?55:275;const id=t+"-"+n,s=seatState(si,id);
+  for(let n=1;n<=8;n++){const top=n>=5,k=top?8-n:n-1,cx=105+k*117,cy=top?55:275;const id=t+"-"+n,s=seatState(si,id);
    let cls="avail";if(sh.closed.has(t))cls="closed";else if(s.st==="sold"||s.st==="cash")cls=s.st==="cash"&&S.view==="admin"?"cash":"sold";else if(s.st==="held")cls=s.by==="me"?"mine":"held";
    const c=el("circle",{cx,cy,r:44,class:"seat "+cls,"data-id":id,style:"stroke-width:3"},svg);
    if(cls==="sold"||cls==="cash"){el("path",{d:`M${cx-24},${cy-24}L${cx+24},${cy+24}M${cx+24},${cy-24}L${cx-24},${cy+24}`,class:"x",style:"stroke-width:6"},svg)}
