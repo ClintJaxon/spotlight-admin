@@ -127,7 +127,7 @@ function render(){
    let cls="avail";if(closed)cls="closed";else if(s.st==="sold")cls="sold";else if(s.st==="cash")cls=S.view==="admin"?"cash":"sold";
    else if(s.st==="held")cls=s.by==="me"?"mine":"held";
    const c=el("circle",{cx,cy,r:11,class:"seat "+cls,"data-id":id},g);
-   if(cls==="sold"||cls==="cash"){el("path",{d:`M${cx-6},${cy-6}L${cx+6},${cy+6}M${cx+6},${cy-6}L${cx-6},${cy+6}`,class:"x",style:cls==="cash"?"stroke:#7a2e00":""},g);if(s.ci)el("circle",{cx:cx,cy:cy,r:10,fill:"none",stroke:"#2ee36a","stroke-width":3},g)}
+   if(cls==="sold"||cls==="cash"){el("path",{d:`M${cx-6},${cy-6}L${cx+6},${cy+6}M${cx+6},${cy-6}L${cx-6},${cy+6}`,class:"x",style:cls==="cash"?"stroke:#7a2e00":""},g);if(s.ci)el("circle",{cx:cx,cy:cy,r:10,fill:"none",stroke:"#2ee36a","stroke-width":3,"pointer-events":"none"},g)}
    const t=el("text",{x:cx,y:cy+3,class:"sn",transform:`rotate(${-T.rot} ${cx} ${cy})`},g);if(cls==="avail"||cls==="mine"||cls==="held")t.textContent=n;
    c.addEventListener("click",()=>seatClick(id));c.addEventListener("pointerdown",e=>startDrag(e,id));
    }
@@ -265,16 +265,16 @@ function doRefund(si,ids,label){if(DOOR)return;const sh=S.shows[si];const first=
  toast(wasCash?"Order cancelled. Seats are open again.":"Refunded $"+amt+" (demo). Seats are open again.");S.sel=null;render()}
 // ---- drag & drop (admin)
 const ghost=document.getElementById("ghost");
-function startDrag(e,id){if(S.view!=="admin")return;const s=seatState(S.show,id);if(!["sold","cash"].includes(s.st))return;
+function startDrag(e,id){if(S.view!=="admin")return;const s=seatState(S.show,id);if(!["sold","cash","avail"].includes(s.st))return;
  S.drag={id,x:e.clientX,y:e.clientY,on:false};}
 addEventListener("pointermove",e=>{const d=S.drag;if(!d)return;if(!d.on&&Math.hypot(e.clientX-d.x,e.clientY-d.y)>6){d.on=true;S.dragMoved=true}
- if(d.on){const s=seatState(S.show,d.id);ghost.style.display="block";ghost.textContent="Move "+s.guest.name+" from "+d.id;ghost.style.left=e.clientX+14+"px";ghost.style.top=e.clientY+14+"px"}});
+ if(d.on){const s=seatState(S.show,d.id);ghost.style.display="block";ghost.textContent=s.guest?"Move "+s.guest.name+" from "+d.id:"Move a guest into "+d.id;ghost.style.left=e.clientX+14+"px";ghost.style.top=e.clientY+14+"px"}});
 addEventListener("pointercancel",()=>{S.drag=null;ghost.style.display="none";setTimeout(()=>S.dragMoved=false,0)});
 addEventListener("dragstart",e=>{if(S.drag)e.preventDefault()});
 addEventListener("selectstart",e=>{if(S.drag)e.preventDefault()});
 addEventListener("pointerup",e=>{const d=S.drag;S.drag=null;ghost.style.display="none";if(!d||!d.on){return}
  const t=document.elementFromPoint(e.clientX,e.clientY);const to=t&&t.dataset&&t.dataset.id;setTimeout(()=>S.dragMoved=false,0);
- if(!to||to===d.id)return;moveSeat(S.show,d.id,to)});
+ if(!to||to===d.id)return;if(!S.shows[S.show].seats[d.id]){const g=S.shows[S.show].seats[to];if(g&&["sold","cash"].includes(g.st))moveSeat(S.show,to,d.id);return}moveSeat(S.show,d.id,to)});
 function touchC(x){const c=x&&x.guest&&S.cust[ck(x.guest)];if(c)c.ed=Date.now()+(S.sq=(S.sq||0)+1)/1000}
 function moveSeat(si,from,to){const sh=S.shows[si];const a=sh.seats[from],T=to.split("-")[0];touchC(a);touchC(sh.seats[to]);
  if(sh.closed.has(T)){toast("Can't move: table "+T+" is closed for this show.");return}
@@ -380,7 +380,7 @@ const _ar=applyRole;applyRole=async function(){await _ar();REAL=DOOR;wrap.style.
 const aside=document.querySelector("aside");
 const card=document.createElement("div");card.className="card";card.id="ciCard";
 card.innerHTML='<h3>Check-in <span id="ciCount" class="small"></span></h3><input id="ciQ" placeholder="Type guest name..." autocomplete="off" autocapitalize="off" spellcheck="false" style="font-size:24px;padding:14px;width:100%;box-sizing:border-box;border:3px solid #1d1a16;border-radius:12px"><div id="ciRes"></div>';
-aside.insertBefore(card,document.getElementById("cartCard"));
+aside.insertBefore(card,document.getElementById("cartCard"));{const iv=document.getElementById("inviteCard");if(iv&&iv!==card){card.parentNode.insertBefore(iv,card);iv.style.marginTop="0";iv.style.marginBottom="12px"}}
 const bub=document.createElement("div");bub.id="ciBub";bub.innerHTML='<div class="ciBox" id="ciBox"></div>';document.body.appendChild(bub);
 const tk=document.createElement("div");tk.id="ticket";document.body.appendChild(tk);
 const st=document.createElement("style");st.textContent=`
@@ -403,6 +403,7 @@ const st=document.createElement("style");st.textContent=`
 #rptBox{background:#fff;border:4px solid #1d1a16;border-radius:16px;padding:20px;max-width:620px;width:100%;box-sizing:border-box;max-height:92vh;overflow:auto;font-size:18px}
 #rptBox h3{margin:0 0 4px;font-size:26px}#rptBox table{width:100%;border-collapse:collapse;margin:8px 0 14px}#rptBox td,#rptBox th{padding:6px 8px;border-bottom:1px solid #ccc;text-align:left}#rptBox td.n,#rptBox th.n{text-align:right}
 #rptBox .row{display:flex;gap:10px;margin-top:10px}#rptBox button{flex:1;padding:14px;font-size:20px;border-radius:12px;border:3px solid #1d1a16;background:#fff}
+body.door #rptOpen,body.door #rptBub{display:none!important}
 #rptP{display:none}@media print{body.printrpt>*:not(#rptP){display:none!important}body.printrpt #rptP{display:block}}
 .ciBox .go.re{background:#2f6bff}.ciBox .sm{margin-top:14px;display:flex;justify-content:space-between;gap:10px}
 .ciBox .sm button{font-size:16px;padding:10px 14px;border:2px solid #777;border-radius:10px;background:#fff}
@@ -490,7 +491,7 @@ function rptHTML(){const sh=S.shows[S.show],o={};for(const id in sh.seats){const
  +'<table><tr><th>Check-in</th><th class="n">Parties</th><th class="n">Seats</th></tr><tr><td>Checked in</td><td class="n">'+cnt(q=>q.ci)+' of '+L.length+'</td><td class="n">'+sum(q=>q.ci)+' of '+sum(()=>1)+'</td></tr></table>'
  +'<b>Overrides ('+ov.length+')</b>'+(ov.length?'<table><tr><th>Time</th><th>Guest</th><th>Order</th><th class="n">Seats</th><th>Station</th></tr>'+ov.map(q=>'<tr><td>'+tm(q.ovr.at)+'</td><td>'+esc(q.name)+(q.unpaid?' (still unpaid)':' (paid later)')+'</td><td>'+esc(q.order||"-")+'</td><td class="n">'+q.n+' / '+$(q.n)+'</td><td>'+esc(q.ovr.by||"-")+'</td></tr>').join("")+'</table>':'<div style="margin:6px 0 12px">None. Every check-in had cash or card in hand.</div>')
  +'<div style="font-size:14px;color:#555">Seat counts are tickets at $'+PRICE+'. Practice season: all guests are pretend.</div>'}
-function openRpt(){const h=rptHTML();document.getElementById("rptBox").innerHTML=h+'<div class="row"><button id="rptPr">Print</button><button id="rptX">Close</button></div>';rp.innerHTML=h;rb.style.display="flex";document.getElementById("rptX").onclick=()=>{rb.style.display="none"};document.getElementById("rptPr").onclick=()=>{document.body.classList.add("printrpt");setTimeout(()=>{try{window.print()}finally{setTimeout(()=>document.body.classList.remove("printrpt"),500)}},50)}}
+function openRpt(){if(DOOR)return;const h=rptHTML();document.getElementById("rptBox").innerHTML=h+'<div class="row"><button id="rptPr">Print</button><button id="rptX">Close</button></div>';rp.innerHTML=h;rb.style.display="flex";document.getElementById("rptX").onclick=()=>{rb.style.display="none"};document.getElementById("rptPr").onclick=()=>{document.body.classList.add("printrpt");setTimeout(()=>{try{window.print()}finally{setTimeout(()=>document.body.classList.remove("printrpt"),500)}},50)}}
 rb.addEventListener("click",e=>{if(e.target===rb)rb.style.display="none"});
 const rbtn=document.createElement("button");rbtn.id="rptOpen";rbtn.textContent="End-of-night report";rbtn.style.cssText="margin-top:10px;padding:10px 14px;font-size:16px;border:2px solid #1d1a16;border-radius:10px;background:#fff";rbtn.onclick=openRpt;card.appendChild(rbtn);
 window.__ci={openRpt,renderCI,parties,openBub,ticket,showTix};
