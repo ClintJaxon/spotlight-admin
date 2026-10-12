@@ -118,9 +118,9 @@ function render(){
   const g=el("g",{transform:`translate(${T.x},${T.y}) rotate(${T.rot})`},svg);
   el("rect",{x:-48,y:-18,width:96,height:36,rx:8,class:"tbl"+(closed?" closed":"")},g);
   const lab=el("text",{x:0,y:5,class:"tlab"},g);
-  if(S.view==="admin"){lab.textContent=T.id;g.style.cursor="pointer";el("rect",{x:-48,y:-18,width:96,height:36,fill:"transparent"},g).addEventListener("click",()=>openTable(T.id))}else{const parts=NAME[T.id].split(" ");const half=parts.length>2?2:1;const a=parts.slice(0,half).join(" "),b=parts.slice(half).join(" ");
+  if(S.view==="admin"&&!S.tnames){lab.textContent=T.id;g.style.cursor="pointer";el("rect",{x:-48,y:-18,width:96,height:36,fill:"transparent"},g).addEventListener("click",()=>openTable(T.id))}else{const parts=NAME[T.id].split(" ");const half=parts.length>2?2:1;const a=parts.slice(0,half).join(" "),b=parts.slice(half).join(" ");
    lab.setAttribute("style","font-size:11.5px");lab.setAttribute("y",-1);const t1=el("tspan",{x:0,dy:0},lab);t1.textContent=a;const t2=el("tspan",{x:0,dy:12},lab);t2.textContent=b;
-   if(!closed){g.style.cursor="pointer";el("rect",{x:-48,y:-18,width:96,height:36,fill:"transparent"},g).addEventListener("click",()=>openTable(T.id))}}
+   if(!closed||S.view==="admin"){g.style.cursor="pointer";el("rect",{x:-48,y:-18,width:96,height:36,fill:"transparent"},g).addEventListener("click",()=>openTable(T.id))}}
   
   for(let n=1;n<=8;n++){const top=n>=5;const k=top?8-n:n-1;const cx=-36+k*24,cy=top?-33:33;
    const id=T.id+"-"+n,s=seatState(si,id);
@@ -499,4 +499,15 @@ const _r1=render;render=function(){_r1.apply(this,arguments);renderCI()};
 const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};renderCI();
 })();
 
-</script><script>document.getElementById("tender").addEventListener("change",function(){document.getElementById("cardRow").style.display=(S.view==="admin"&&this.value==="card")?"block":"none"});</script></body></html>
+</script><script>document.getElementById("tender").addEventListener("change",function(){document.getElementById("cardRow").style.display=(S.view==="admin"&&this.value==="card")?"block":"none"});</script><script>
+// Table label toggle for admin + POS: switch the room map between table numbers (L/C/R codes) and artist names. One button, shared by both views, so the choice stays consistent. Guest view always shows names.
+(function(){
+  S.tnames=false;
+  var b=document.createElement("button");
+  b.id="vNames";b.type="button";
+  function paint(){b.textContent=S.tnames?"Tables: Names":"Tables: #";b.className=S.tnames?"on":""}
+  b.onclick=function(){S.tnames=!S.tnames;paint();render()};
+  var wrap=document.getElementById("viewSw");
+  if(wrap){wrap.appendChild(b);paint()}
+})();
+</script></body></html>
