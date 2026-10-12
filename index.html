@@ -520,9 +520,9 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
   if(wrap){wrap.appendChild(b);paint()}
 })();
 </script><script>
-// POS idle revert: after 2 minutes without interaction, POS view returns to Debbie's admin view. Any tap, click, key or scroll restarts the clock, so nobody gets bounced mid-sale.
+// POS idle revert: after 30 seconds without interaction, POS view returns to Debbie's admin view. Any tap, click, key or scroll restarts the clock, so nobody gets bounced mid-sale.
 (function(){
-  var IDLE_MS=120000,t=null;
+  var IDLE_MS=30000,t=null;
   function stop(){if(t){clearTimeout(t);t=null}}
   function arm(){stop();t=setTimeout(function(){t=null;mode("admin")},IDLE_MS)}
   var _mode=mode;
