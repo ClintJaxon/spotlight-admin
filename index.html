@@ -54,7 +54,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
  <div class="card">
   <div class="row"><label style="margin:0">Show:</label><select id="show"></select>
    <span id="admTools" style="display:none" class="row">
-    <button id="tmode">Switch single tables ON/OFF: off</button>
+    <button id="tmode">Switch single tables ON/OFF: off</button> <button id="undoB" disabled title="Reverse the last seating change">Undo</button>
     <span style="flex-basis:100%;height:0"></span><span class="small">(Single tables: turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
   <div class="legend"><span><i style="background:var(--avail)"></i>Available</span><span><i style="background:var(--sel)"></i>Yours (selected)</span><span><i style="background:var(--held)"></i>Held by someone (15 min)</span><span id="lgCash"><i style="background:var(--cash)"></i>Cash - waiting for payment</span><span><i style="background:var(--sold)"></i>Sold (dark + X)</span><span><i style="background:#cfc8b5"></i>Table closed</span></div>
   <div class="mapwrap"><svg id="map" viewBox="20 40 1040 700"></svg></div>
@@ -142,7 +142,7 @@ function render(){
 document.getElementById("tmode").onclick=function(){S.tmode=!S.tmode;this.textContent="Switch single tables ON/OFF: "+(S.tmode?"ON - tap tables":"off");this.classList.toggle("on",S.tmode)};
 function toggleClosed(t){const c=S.shows[S.show].closed;const sold=seatsOf(t).some(i=>["sold","cash"].includes(seatState(S.show,i).st));
  if(!c.has(t)&&sold){toast("Can't close "+t+": it has guests seated.");return}
- c.has(t)?c.delete(t):c.add(t);log((c.has(t)?"Closed ":"Opened ")+t+" for "+SHOWS[S.show][0]);render()}
+ markUndo();c.has(t)?c.delete(t):c.add(t);log((c.has(t)?"Closed ":"Opened ")+t+" for "+SHOWS[S.show][0]);render()}
 // ---- seat clicks
 function seatClick(id,fromModal){if(S.dragMoved){S.dragMoved=false;return}
  if(!fromModal&&S.view==="admin"){S.sel={show:S.show,seat:id};S.ask=null;render();return}
@@ -245,7 +245,7 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
  const s=seatState(S.sel.show,S.sel.seat);if(!s.guest&&s.st!=="held"){info.textContent="Seat "+S.sel.seat+" is open.";return}
  if(s.st==="held"){const mins=Math.max(1,Math.ceil((s.exp-Date.now())/60000));const g0=s.guest;
   info.innerHTML=`<b>${S.sel.seat}</b> (${NAME[S.sel.seat.split("-")[0]]}) - ${SHOWS[S.sel.show][1]}<br><b>HELD, not paid yet</b> - hold ends in about ${mins} min<br>`+(s.by==="me"?"In your current order (the form on the right).":(g0?`${g0.name}<br>${DOOR?'':g0.phone+'<br>'+g0.email+'<br>'}<span class="small">Guest is checking out. If they don't pay in time the seat opens up again by itself.</span>`:"A guest is checking out and hasn't entered their details yet."));
-  if(s.by!=="me"){const x=document.createElement("button");x.textContent="Release this hold";x.onclick=()=>{delete S.shows[S.sel.show].seats[S.sel.seat];log("Released hold on "+S.sel.seat+" ("+SHOWS[S.sel.show][0]+")"+(g0?" held by "+g0.name:""));S.sel=null;render()};b.appendChild(x)}
+  if(s.by!=="me"){const x=document.createElement("button");x.textContent="Release this hold";x.onclick=()=>{markUndo();delete S.shows[S.sel.show].seats[S.sel.seat];log("Released hold on "+S.sel.seat+" ("+SHOWS[S.sel.show][0]+")"+(g0?" held by "+g0.name:""));S.sel=null;render()};b.appendChild(x)}
   return}
  const g=s.guest;info.innerHTML=`<b>${S.sel.seat}</b> (${NAME[S.sel.seat.split("-")[0]]}) - ${SHOWS[S.sel.show][1]}<br>${g.name}<br>${DOOR?"":g.phone+"<br>"+g.email+"<br>"}${grp(S.sel.show,S.sel.seat,s)}Order ${s.order} - ${s.st==="cash"?"<b>CASH, not yet received</b>":(s.tender==="card"?"paid by card (card details stored encrypted, never shown)":"paid in cash")}`;
  const mk=(t,f,c)=>{if(DOOR&&/refund|cancel/i.test(t))return;const x=document.createElement("button");x.textContent=t;if(c)x.className=c;x.onclick=f;b.appendChild(x)};
@@ -255,11 +255,11 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
   info.innerHTML+=`<div style="margin-top:8px;padding:8px;border:2px solid #c0392b;border-radius:8px;background:#fff3f0"><b>${msg}?</b><br><span class="small">${s.st==="cash"?"Cash order: nothing was charged to a card. Debbie hands back any cash she took.":"Goes back to the card the guest paid with (Square). Per policy, refunds 48+ hours before the show, minus a small processing fee."} The seats open up again.</span></div>`;
   mk("Yes, refund",()=>{const a=S.ask;S.ask=null;doRefund(a.show,a.kind==="seat"?[a.seat]:ordIds,a.kind==="seat"?"seat "+a.seat:"order "+s.order)},"warn");
   mk("Cancel",()=>{S.ask=null;render()});return}
- if(s.st==="cash"){mk("Cash received - mark sold",()=>{const o=s.order;const sh=S.shows[S.sel.show];for(const k in sh.seats)if(sh.seats[k].order===o&&sh.seats[k].st==="cash")sh.seats[k].st="sold";log("Order "+o+": cash received, seats now sold");render()},"pri");
+ if(s.st==="cash"){mk("Cash received - mark sold",()=>{markUndo();const o=s.order;const sh=S.shows[S.sel.show];for(const k in sh.seats)if(sh.seats[k].order===o&&sh.seats[k].st==="cash")sh.seats[k].st="sold";log("Order "+o+": cash received, seats now sold");render()},"pri");
   mk("Cancel whole order (no card charge)",()=>{S.ask={kind:"order",seat:S.sel.seat,show:S.sel.show};render()},"warn")}
  else mk("Refund whole order ($"+amt+")",()=>{S.ask={kind:"order",seat:S.sel.seat,show:S.sel.show};render()},"warn");
  mk("Refund just this seat ($"+PRICE+")",()=>{S.ask={kind:"seat",seat:S.sel.seat,show:S.sel.show};render()})}
-function doRefund(si,ids,label){if(DOOR)return;const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const wasCash=first&&first.st==="cash";
+function doRefund(si,ids,label){if(DOOR)return;markUndo();const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const wasCash=first&&first.st==="cash";
  ids.forEach(id=>{const x=sh.seats[id];touchC(x);if(x&&x.guest){const c=S.cust[ck(x.guest)],d=SHOWS[si][0];if(c&&c.shows[d]){c.shows[d]--;if(c.shows[d]<=0)delete c.shows[d]}}delete sh.seats[id]});
  const amt=ids.length*PRICE;log((wasCash?"Cancelled cash ":"Refunded $"+amt+" to card - ")+label+(g?" ("+g.name+")":"")+" for "+SHOWS[si][0]+" - seats open again");
  toast(wasCash?"Order cancelled. Seats are open again.":"Refunded $"+amt+" (demo). Seats are open again.");S.sel=null;render()}
@@ -279,8 +279,8 @@ function touchC(x){const c=x&&x.guest&&S.cust[ck(x.guest)];if(c)c.ed=Date.now()+
 function moveSeat(si,from,to){const sh=S.shows[si];const a=sh.seats[from],T=to.split("-")[0];touchC(a);touchC(sh.seats[to]);
  if(sh.closed.has(T)){toast("Can't move: table "+T+" is closed for this show.");return}
  const dst=sh.seats[to];if(dst&&dst.st==="held"){toast("Can't move: that seat is being held by a guest.");return}
- if(dst){sh.seats[to]=a;sh.seats[from]=dst;S.sel={show:si,seat:to};log(`Swapped ${a.guest.name} (${from} -> ${to}) with ${dst.guest.name} (${to} -> ${from})`);toast("Swapped "+from+" and "+to);render();return}
- sh.seats[to]=a;delete sh.seats[from];S.sel={show:si,seat:to};log(`Moved ${a.guest.name}: ${from} -> ${to} (order ${a.order})`);toast("Moved "+from+" to "+to);render()}
+ if(dst){markUndo();sh.seats[to]=a;sh.seats[from]=dst;S.sel={show:si,seat:to};log(`Swapped ${a.guest.name} (${from} -> ${to}) with ${dst.guest.name} (${to} -> ${from})`);toast("Swapped "+from+" and "+to);render();return}
+ markUndo();sh.seats[to]=a;delete sh.seats[from];S.sel={show:si,seat:to};log(`Moved ${a.guest.name}: ${from} -> ${to} (order ${a.order})`);toast("Moved "+from+" to "+to);render()}
 // ---- customers, log, view, show picker
 function renderCust(){const t=document.getElementById("cust");const lf=n=>{n=n.trim();const i=n.lastIndexOf(" ");return i<0?n:n.slice(i+1)+", "+n.slice(0,i)};const q=(document.getElementById("custQ").value||"").trim().toLowerCase();
  const rows=Object.values(S.cust).map(c=>({c,d:lf(c.name)})).filter(r=>{if(!q)return true;const hay=(r.d+" "+r.c.name+" "+r.c.email+" "+r.c.phone).toLowerCase(),pd=String(r.c.phone||"").replace(/\D/g,""),sq=x=>x.replace(/(.)\1+/g,"$1"),hs=sq(hay);return q.split(/\s+/).every(t=>hay.includes(t)||hs.includes(sq(t))||(t.replace(/\D/g,"").length>=3&&pd.includes(t.replace(/\D/g,""))))}).sort((x,y)=>S.cs==="e"?(y.c.ed||0)-(x.c.ed||0):x.d.localeCompare(y.d)).map(r=>Object.assign({},r.c,{disp:r.d}));
@@ -370,6 +370,14 @@ async function presTick(){if(!LOGGED||DOOR||S.view!=="admin"){renderPres();retur
  renderPres()}
 setInterval(presTick,20000);
 const _r2=render;render=function(){_r2.apply(this,arguments);renderPres()};
+/* ---- Undo: reverse the most recent seating change (admin view) ---- */
+var UNDO=[];
+function snapState(){return JSON.stringify(S.shows.map(function(sh){return{seats:sh.seats,closed:Array.from(sh.closed)}}))}
+function markUndo(){try{UNDO.push(snapState());if(UNDO.length>10)UNDO.shift();var b=document.getElementById("undoB");if(b)b.disabled=false}catch(e){}}
+function doUndo(){var b=document.getElementById("undoB");if(!UNDO.length){toast("Nothing to undo");return}
+ var st=JSON.parse(UNDO.pop());S.shows=st.map(function(o){return{seats:o.seats||{},closed:new Set(o.closed||[])}});
+ S.sel=null;S.cart=[];log("Undid the last seating change");toast("Undid the last change");if(b)b.disabled=UNDO.length===0;render()}
+document.getElementById("undoB").onclick=doUndo;
 document.getElementById("ivGo").onclick=async()=>{const m=document.getElementById("ivMsg"),em=document.getElementById("ivEm").value.trim();if(!em){m.textContent="Type their email first.";return}m.textContent="Sending...";try{const r=await sfetch(SB+"/functions/v1/invite-user",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+TOK,"Content-Type":"application/json"},body:JSON.stringify({email:em,name:document.getElementById("ivNm").value.trim(),role:document.getElementById("ivRole").value})});const j=await r.json();if(!r.ok)throw new Error(j.error||"Could not send");m.textContent="Invitation sent to "+em+".";document.getElementById("ivEm").value="";document.getElementById("ivNm").value=""}catch(e){m.textContent="Could not send: "+e.message}};
 
 document.getElementById("lgGo").onclick=doLogin;document.getElementById("lgPw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
