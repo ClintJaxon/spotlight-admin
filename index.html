@@ -50,8 +50,6 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
   <div class="row"><label style="margin:0">Show:</label><select id="show"></select>
    <span id="admTools" style="display:none" class="row">
     <button id="tmode">Switch single tables ON/OFF: off</button>
-    <button id="cl">Close/open wings:</button>
-    <button data-w="L">Left</button><button data-w="C">Center</button><button data-w="R">Right</button>
     <span style="flex-basis:100%;height:0"></span><span class="small">(Single tables: turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
   <div class="legend"><span><i style="background:var(--avail)"></i>Available</span><span><i style="background:var(--sel)"></i>Yours (selected)</span><span><i style="background:var(--held)"></i>Held by someone (15 min)</span><span id="lgCash"><i style="background:var(--cash)"></i>Cash - waiting for payment</span><span><i style="background:var(--sold)"></i>Sold (dark + X)</span><span><i style="background:#cfc8b5"></i>Table closed</span></div>
   <div class="mapwrap"><svg id="map" viewBox="20 40 1040 700"></svg></div>
@@ -139,10 +137,6 @@ document.getElementById("tmode").onclick=function(){S.tmode=!S.tmode;this.textCo
 function toggleClosed(t){const c=S.shows[S.show].closed;const sold=seatsOf(t).some(i=>["sold","cash"].includes(seatState(S.show,i).st));
  if(!c.has(t)&&sold){toast("Can't close "+t+": it has guests seated.");return}
  c.has(t)?c.delete(t):c.add(t);log((c.has(t)?"Closed ":"Opened ")+t+" for "+SHOWS[S.show][0]);render()}
-document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{const w=b.dataset.w,ts=TABLES.filter(t=>t.w===w).map(t=>t.id);
- const c=S.shows[S.show].closed;const allClosed=ts.every(t=>c.has(t));
- if(!allClosed&&ts.some(t=>seatsOf(t).some(i=>["sold","cash"].includes(seatState(S.show,i).st)))){toast("Wing has guests seated - can't close it.");return}
- ts.forEach(t=>allClosed?c.delete(t):c.add(t));log((allClosed?"Opened ":"Closed ")+w+" wing for "+SHOWS[S.show][0]);render()});
 // ---- seat clicks
 function seatClick(id,fromModal){if(S.dragMoved){S.dragMoved=false;return}
  if(!fromModal&&S.view==="admin"){S.sel={show:S.show,seat:id};S.ask=null;render();return}
