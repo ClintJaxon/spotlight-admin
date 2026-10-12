@@ -362,7 +362,8 @@ let DOOR=false;
 async function applyRole(){try{const u=await(await sfetch(SB+"/auth/v1/user",{headers:{apikey:KEY,Authorization:"Bearer "+TOK}})).json();DOOR=((u.app_metadata||{}).role==="door");document.body.classList.toggle("door",DOOR);window.ACTOR=(u.user_metadata||{}).name||(u.email||"").split("@")[0];window.ACTEM=(u.email||"").toLowerCase()}catch(_){}}
 /* ---- Staff presence panel: green = active session, red = not logged in ---- */
 var PRES=[];
-function renderPres(){var c=document.getElementById("presCard");if(!c)return;var show=LOGGED&&!DOOR&&S.view==="admin";c.style.display=show?"block":"none";if(!show)return;var now=Date.now();c.innerHTML=(PRES.length?PRES:[{name:window.ACTOR||"me",at:new Date().toISOString()}]).map(function(p){var on=p.at&&(now-new Date(p.at).getTime())<90000;return '<div class="pr"><span class="dot '+(on?"on":"off")+'"></span>'+esc(p.name)+'</div>'}).join("")}
+function escp(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function renderPres(){var c=document.getElementById("presCard");if(!c)return;var show=LOGGED&&!DOOR&&S.view==="admin";c.style.display=show?"block":"none";if(!show)return;var now=Date.now();c.innerHTML=(PRES.length?PRES:[{name:window.ACTOR||"me",at:new Date().toISOString()}]).map(function(p){var on=p.at&&(now-new Date(p.at).getTime())<90000;return '<div class="pr"><span class="dot '+(on?"on":"off")+'"></span>'+escp(p.name)+'</div>'}).join("")}
 async function presTick(){if(!LOGGED||DOOR||S.view!=="admin"){renderPres();return}var id=(window.ACTEM||window.ACTOR||"").toLowerCase();if(!id){renderPres();return}
  try{await rq("presence",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:id,name:window.ACTOR||id,at:new Date().toISOString()})})}catch(e){}
  try{const r=await rq("presence?select=id,name,at&order=name");if(r.ok)PRES=await r.json()}catch(e){}
