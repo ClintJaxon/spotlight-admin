@@ -265,7 +265,7 @@ function doRefund(si,ids,label){if(DOOR)return;const sh=S.shows[si];const first=
  toast(wasCash?"Order cancelled. Seats are open again.":"Refunded $"+amt+" (demo). Seats are open again.");S.sel=null;render()}
 // ---- drag & drop (admin)
 const ghost=document.getElementById("ghost");
-function startDrag(e,id){if(S.view!=="admin")return;const s=seatState(S.show,id);if(!["sold","cash","avail"].includes(s.st))return;
+function startDrag(e,id){if(S.view!=="admin"||DOOR)return;const s=seatState(S.show,id);if(!["sold","cash","avail"].includes(s.st))return;
  S.drag={id,x:e.clientX,y:e.clientY,on:false};}
 addEventListener("pointermove",e=>{const d=S.drag;if(!d)return;if(!d.on&&Math.hypot(e.clientX-d.x,e.clientY-d.y)>6){d.on=true;S.dragMoved=true}
  if(d.on){const s=seatState(S.show,d.id);ghost.style.display="block";ghost.textContent=s.guest?"Move "+s.guest.name+" from "+d.id:"Move a guest into "+d.id;ghost.style.left=e.clientX+14+"px";ghost.style.top=e.clientY+14+"px"}});
