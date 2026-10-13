@@ -87,6 +87,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
 <script>
 const SHOWS=[["2026-12-16","A Country Christmas"],["2026-12-23","A Country Christmas"],["2027-01-13","Conway Twitty"],["2027-01-20","Charley Pride"],["2027-01-27","George Jones"],["2027-02-03","Pioneers & Legends"],["2027-02-10","Don Williams"],["2027-02-17","Johnny Cash"],["2027-02-24","Keith Whitley"],["2027-03-03","Merle Haggard"],["2027-03-10","Ray Price"],["2027-03-17","Marty Robbins"],["2027-03-24","Buck Owens"],["2027-03-31","Jim Reeves"]];
 const PRICE=35,HOLD=15*60*1000;
+const fmtPh=v=>{const d=String(v||"").replace(/\D/g,"").replace(/^1(?=\d{10}$)/,"");return d.length===10?d.slice(0,3)+"-"+d.slice(3,6)+"-"+d.slice(6):(v||"")};
 const fmt=d=>new Date(d+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
 // ---- room geometry: 27 tables. L1-6 (2 per row), C1-12 (4 per row), R1-9 (3 per row); wings angled 45deg
 const TABLES=[];
@@ -520,7 +521,6 @@ function parties(){const sh=S.shows[S.show],m={};for(const id in sh.seats){const
 const lf=n=>{n=String(n||"").trim();const i=n.lastIndexOf(" ");return i<0?n:n.slice(i+1)+", "+n.slice(0,i)};
 const where=p=>Object.entries(p.tables).map(([t,a])=>(NAME[t]||t)+" ("+t+") seats "+rng(a)).join("; ");
 function hit(p,q){const hay=(lf(p.name)+" "+p.name+" "+(p.order||"")).toLowerCase(),pd=p.phone.replace(/\D/g,""),hs=sq(hay);return q.split(/\s+/).every(t=>hay.includes(t)||hs.includes(sq(t))||(t.replace(/\D/g,"").length>=3&&pd.includes(t.replace(/\D/g,""))))}
-const fmtPh=v=>{const d=String(v||"").replace(/\D/g,"").replace(/^1(?=\d{10}$)/,"");return d.length===10?d.slice(0,3)+"-"+d.slice(3,6)+"-"+d.slice(6):(v||"")};
 const tm=ts=>new Date(ts).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
 function renderCI(){const c=document.getElementById("ciCard");if(!c)return;c.style.display=S.view==="guest"?"none":"";if(S.view==="guest")return;const ps=parties();document.getElementById("ciCount").textContent=ps.length?"- "+ps.filter(p=>p.ci).length+" of "+ps.length+" parties in":"";
  const q=nrm(document.getElementById("ciQ").value),res=document.getElementById("ciRes");if(q.length<2){res.innerHTML="";return}
