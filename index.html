@@ -589,7 +589,7 @@ function showTix(p){ticket(p);const b=document.getElementById('tkBox'),n=p.ids.l
  document.getElementById('tkM').onclick=()=>{TS=Math.max(.6,TS-.1);showTix(p)};document.getElementById('tkP').onclick=()=>{TS=Math.min(1.4,TS+.1);showTix(p)}}
 async function go(p){const sel=p.ids.filter(function(id){const c=document.querySelector('.ciSeatC[value="'+id+'"]');return !c||c.checked});closeBub();NOWIRE=false;
  if(!sel.length){toast("Pick at least one ticket to print.");document.getElementById("ciQ").value="";renderCI();return}
- const need=sel.filter(function(id){const x=S.shows[S.show].seats[id];return x&&!x.ci}),p2=Object.assign({},p,{ids:sel});
+ const need=sel.filter(function(id){const x=S.shows[S.show].seats[id];return x&&!x.ci}),tb={};sel.forEach(function(id){const pr=id.split("-"),t=pr.slice(0,-1).join("-");(tb[t]=tb[t]||[]).push(+pr[pr.length-1])});const p2=Object.assign({},p,{ids:sel,tables:tb});
  if(need.length){const ok=await mark(Object.assign({},p,{ids:need}),true);if(ok==="nowire"){document.getElementById("ciQ").value="";document.getElementById("ciRes").innerHTML="";renderCI();showTix(p2);return}if(ok===false){document.getElementById("ciQ").value="";renderCI();return}}
  document.getElementById("ciQ").value="";document.getElementById("ciRes").innerHTML="";renderCI();showTix(p2)}
 async function undo(p){closeBub();const sh=S.shows[S.show];if(p.ids.some(i=>sh.seats[i]&&sh.seats[i].ovr)){p.ids.forEach(i=>{if(sh.seats[i])delete sh.seats[i].ovr});log("Override cleared: check-in undone for "+p.name)}await mark(p,false);renderCI()}
