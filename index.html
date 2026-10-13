@@ -320,7 +320,7 @@ async function load(force){if(loading)return;loading=true;try{
  SHOWS.forEach((s,si)=>{for(const id in S.shows[si].seats){const x=S.shows[si].seats[id];if(x.guest&&x.guest.email&&(x.st==="sold"||x.st==="cash"))addCust(x.guest,si)}});
  for(const k in S.cust)S.cust[k].ed=eds[k]||0;
  S.log=logs.map(l=>new Date(l.at).toLocaleTimeString()+" - "+(l.actor?l.actor+": ":"")+l.action);
- S.cart=S.cart.filter(c=>{const o=S.shows[c.show].seats[c.seat];return o&&o.st==="held"&&o.by==="me"});
+ S.cart=S.cart.filter(c=>{const o=S.shows[c.show].seats[c.seat];return o&&o.st==="held"&&o.by==="me"});S.shows.forEach((sh2,si2)=>{for(const id2 in sh2.seats){const o2=sh2.seats[id2];if(o2.st==="held"&&o2.by==="me"&&!S.cart.some(c=>c.show===si2&&c.seat===id2))S.cart.push({show:si2,seat:id2})}});
  renderLog();_render();
 }finally{loading=false}}
 async function pushOnce(){
