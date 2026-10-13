@@ -365,18 +365,31 @@ async function applyRole(){try{const u=await(await sfetch(SB+"/auth/v1/user",{he
 /* ---- Staff presence panel: green = active session, red = not logged in ---- */
 var PRES=[];
 function escp(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-(function(){var lc=document.getElementById("log");if(lc){lc=lc.closest(".card");var pc=document.createElement("div");pc.className="card admOnly";pc.id="presCard";pc.style.marginTop="12px";pc.innerHTML="<h3>Who's logged in</h3><div id=\"presList\"></div><div class=\"small\" style=\"margin-top:6px;color:var(--mut)\">Green = logged in now, red = not. Updates every 20 seconds. An account appears after its first sign-in.</div>";lc.parentNode.insertBefore(pc,lc.nextSibling)}})();
+(function(){var lc=document.getElementById("log");if(lc){lc=lc.closest(".card");var pc=document.createElement("div");pc.className="card admOnly";pc.id="presCard";pc.style.marginTop="12px";pc.innerHTML="<h3>Who's logged in</h3><div id=\"presList\"></div><div class=\"small\" style=\"margin-top:6px;color:var(--mut)\">Green = logged in now, red = not. Every invite shows here, even before their first login. The X cancels access until you re-invite them.</div>";lc.parentNode.insertBefore(pc,lc.nextSibling)}})();
+var INVITES=[];
+async function invitesGet(){try{const r=await rq("settings?select=value&key=eq.invites");const j=await r.json();INVITES=(j[0]&&j[0].value&&JSON.parse(j[0].value))||[]}catch(e){}}
+async function invitesSet(){const r=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"invites",value:JSON.stringify(INVITES)})});if(!r.ok)throw new Error("could not save")}
 function renderPres(){var c=document.getElementById("presList");if(!c)return;var now=Date.now();
- var list=(PRES.length?PRES:[{name:window.ACTOR||"me",id:window.ACTEM||"",at:new Date().toISOString()}]).slice();
+ var byEm={};INVITES.forEach(function(v){if(v.revoked)return;byEm[v.email]={email:v.email,name:v.name||v.email,role:v.role||"",at:null}});
+ PRES.forEach(function(p){var e=byEm[p.id]||(byEm[p.id]={email:p.id,name:p.name||p.id,role:"",at:null});e.at=p.at;if(p.name)e.name=p.name});
+ var list=Object.keys(byEm).map(function(k){return byEm[k]});
  list.sort(function(a,b){var ao=a.at&&(now-new Date(a.at).getTime())<90000?0:1,bo=b.at&&(now-new Date(b.at).getTime())<90000?0:1;return ao-bo||String(a.name).localeCompare(String(b.name))});
  c.innerHTML=list.map(function(p){var on=p.at&&(now-new Date(p.at).getTime())<90000;
-  return '<div class="prow '+(on?"on":"off")+'"><span class="dot '+(on?"on":"off")+'"></span><div style="flex:1;min-width:0"><b>'+escp(p.name)+'</b> <span style="color:var(--mut);font-size:12px">'+escp(p.id||"")+'</span></div><div style="font-size:12px;color:var(--mut);white-space:nowrap">'+(on?'online now':'last seen '+new Date(p.at).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))+'</div></div>'}).join("")}
+  var sub=on?"online now":(p.at?"last login "+new Date(p.at).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"invited - never logged in");
+  return '<div class="prow '+(on?"on":"off")+'"><span class="dot '+(on?"on":"off")+'"></span><div style="flex:1;min-width:0"><b>'+escp(p.name)+'</b> <span style="color:var(--mut);font-size:12px">'+escp(p.email)+'</span><div style="font-size:12px;color:var(--mut)">'+sub+'</div></div><button data-x="'+escp(p.email)+'" title="Cancel this login" style="flex:0 0 auto;border:2px solid #c0392b;color:#c0392b;border-radius:8px;background:#fff;font-size:18px;line-height:1;padding:5px 10px;cursor:pointer">&times;</button></div>'}).join("")}
+document.getElementById("presList").addEventListener("click",async function(e){var b=e.target.closest("[data-x]");if(!b)return;var em=b.getAttribute("data-x");
+ if(!window.confirm("Are you sure you want to cancel this login?\n\n"+em+" loses access to the site until they are re-invited."))return;
+ try{var v=INVITES.find(function(x){return x.email===em});if(v)v.revoked=true;else INVITES.push({email:em,name:"",role:"",invited_at:new Date().toISOString(),revoked:true});
+  await invitesSet();try{await rq("presence?id=eq."+encodeURIComponent(em),{method:"DELETE"})}catch(_){}
+  PRES=PRES.filter(function(p){return p.id!==em});log("Cancelled login access for "+em);toast("Access cancelled for "+em);renderPres()}catch(err){toast("Could not cancel: "+err.message)}});
 async function presTick(){if(!LOGGED){renderPres();return}var id=(window.ACTEM||window.ACTOR||"").toLowerCase();if(!id){renderPres();return}
  try{await rq("presence",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:id,name:window.ACTOR||id,at:new Date().toISOString()})})}catch(e){}
  try{const r=await rq("presence?select=id,name,at&order=name");if(r.ok)PRES=await r.json()}catch(e){}
+ await invitesGet();
+ if(INVITES.find(function(v){return v.email===id&&v.revoked})){showLogin("Your access was cancelled. Ask Debbie to send you a new invite.");return}
  renderPres()}
 setInterval(presTick,20000);
-const _r2=render;render=function(){var sx=window.scrollX,sy=window.scrollY;_r2.apply(this,arguments);renderPres();window.scrollTo(sx,sy)};
+const _r2=render;render=function(){var a=document.activeElement;if(a&&(a.tagName==="SELECT"||a.tagName==="BUTTON"))a.blur();var sx=window.scrollX,sy=window.scrollY;_r2.apply(this,arguments);renderPres();window.scrollTo(sx,sy)};
 /* ---- Undo: reverse the most recent seating change (admin view) ---- */
 var UNDO=[];
 function snapState(){return JSON.stringify(S.shows.map(function(sh){return{seats:sh.seats,closed:Array.from(sh.closed)}}))}
@@ -431,7 +444,8 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
  document.getElementById("compChg").onclick=function(){compShow("change")};
  document.getElementById("compFgt").onclick=function(){compShow("forgot")}})();
 setInterval(function(){if(LOGGED&&!DOOR)compHashGet()},60000);
-document.getElementById("ivGo").onclick=async()=>{const m=document.getElementById("ivMsg"),em=document.getElementById("ivEm").value.trim();if(!em){m.textContent="Type their email first.";return}m.textContent="Sending...";try{const r=await sfetch(SB+"/functions/v1/invite-user",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+TOK,"Content-Type":"application/json"},body:JSON.stringify({email:em,name:document.getElementById("ivNm").value.trim(),role:document.getElementById("ivRole").value})});const j=await r.json();if(!r.ok)throw new Error(j.error||"Could not send");m.textContent="Invitation sent to "+em+".";document.getElementById("ivEm").value="";document.getElementById("ivNm").value=""}catch(e){m.textContent="Could not send: "+e.message}};
+document.getElementById("ivGo").onclick=async()=>{const m=document.getElementById("ivMsg"),em=document.getElementById("ivEm").value.trim();if(!em){m.textContent="Type their email first.";return}m.textContent="Sending...";try{const r=await sfetch(SB+"/functions/v1/invite-user",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+TOK,"Content-Type":"application/json"},body:JSON.stringify({email:em,name:document.getElementById("ivNm").value.trim(),role:document.getElementById("ivRole").value})});const j=await r.json();if(!r.ok)throw new Error(j.error||"Could not send");try{await invitesGet();const em2=em.toLowerCase(),nm=document.getElementById("ivNm").value.trim(),ro=document.getElementById("ivRole").value;const ex=INVITES.find(function(v){return v.email===em2});if(ex){ex.revoked=false;if(nm)ex.name=nm;ex.role=ro}else INVITES.push({email:em2,name:nm,role:ro,invited_at:new Date().toISOString(),revoked:false});await invitesSet()}catch(_){}
+ m.textContent="Invitation sent to "+em+".";document.getElementById("ivEm").value="";document.getElementById("ivNm").value=""}catch(e){m.textContent="Could not send: "+e.message}};
 
 document.getElementById("lgGo").onclick=doLogin;document.getElementById("lgPw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
 
