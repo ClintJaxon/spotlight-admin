@@ -38,6 +38,11 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
 #modal #moreBlock{display:block !important}#more2{width:100%;display:block;margin-top:10px;padding:12px;font-size:24px;box-sizing:border-box}#moreBlock{margin-bottom:14px}
 #presCard{position:fixed;right:10px;bottom:10px;z-index:70;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--mut);display:none;min-width:150px;box-shadow:0 4px 18px rgba(0,0,0,.4)}
 #presCard .pr{display:flex;align-items:center;gap:6px;padding:2px 0;color:var(--text)}
+#presCard{cursor:pointer}
+#presCard.mini{min-width:0;padding:5px 9px;max-width:62vw;overflow:hidden}
+#presCard .prc{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text);margin-right:8px;white-space:nowrap}
+#presCard .prdots{display:flex;gap:5px;align-items:center}
+#presCard .prhd{font-size:11px;color:var(--mut);margin-bottom:4px;white-space:nowrap}
 #presCard .dot{width:8px;height:8px;border-radius:50%;background:#444;flex:0 0 auto}
 #presCard .dot.on{background:#2ee36a}
 #presCard .dot.off{background:#e04545}
@@ -77,7 +82,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
  <div class="card admOnly" id="inviteCard" style="margin-top:12px;display:none"><h3>Invite someone</h3><div class="small">They get an email with a code and a link to this page. Admin sees everything. Door sees seating, names and can sell tickets - no customer list, no contact details, no change log.</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><input id="ivEm" type="email" placeholder="Email" style="flex:2;min-width:180px"><input id="ivNm" placeholder="First name" style="flex:1;min-width:100px"><select id="ivRole"><option value="door">Door / check-in</option><option value="admin">Admin</option></select><button class="pri" id="ivGo">Send invitation</button></div><div id="ivMsg" class="small" style="margin-top:6px"></div></div><div class="card admOnly" style="margin-top:12px;display:none"><h3>Customer list</h3><div style="display:flex;gap:6px;margin:4px 0"><button id="cSortN" class="on" style="padding:6px 10px;border:2px solid #222;border-radius:8px;font-size:14px;cursor:pointer">By last name</button><button id="cSortE" style="padding:6px 10px;border:2px solid #222;border-radius:8px;font-size:14px;cursor:pointer">By last edit</button></div><input id="custQ" type="search" placeholder="Search name, email or phone (e.g. Garth)" style="width:100%;box-sizing:border-box;padding:8px;font-size:15px;margin:4px 0 8px;border:2px solid #222;border-radius:8px"><div style="max-height:200px;overflow:auto"><table id="cust"></table></div>
   <div class="small">One row per guest (matched by email and name). New shows add to their row.</div></div>
  <div class="card admOnly" style="margin-top:12px;display:none"><h3>Change log</h3><div class="log" id="log"></div></div>
-</aside><div id="presCard"></div>
+</aside><div id="presCard" class="mini"></div>
 <div id="compBub" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40002;display:none;align-items:center;justify-content:center;padding:16px"><div style="background:#fff8e8;border-radius:14px;padding:18px;width:min(400px,94vw);max-height:90vh;overflow:auto"><h3 id="compT" style="margin:0 0 8px">Comp</h3><div id="compBody"></div><div id="compMsg" style="color:#c0392b;min-height:20px;font-size:14px;margin-top:6px"></div><div style="display:flex;gap:8px;margin-top:10px"><button id="compGo" class="pri" style="flex:1">Save</button><button id="compX">Cancel</button></div></div></div>
 </main>
 <div id="modal"><div class="pane" id="mLeft"></div><div class="pane" id="mRight"><div id="mAdminHost"></div><div id="mFormHost"></div></div></div>
@@ -283,10 +288,10 @@ function moveSeat(si,from,to){const sh=S.shows[si];const a=sh.seats[from],T=to.s
  if(dst){markUndo();sh.seats[to]=a;sh.seats[from]=dst;S.sel={show:si,seat:to};log(`Swapped ${a.guest.name} (${from} -> ${to}) with ${dst.guest.name} (${to} -> ${from})`);toast("Swapped "+from+" and "+to);render();return}
  markUndo();sh.seats[to]=a;delete sh.seats[from];S.sel={show:si,seat:to};log(`Moved ${a.guest.name}: ${from} -> ${to} (order ${a.order})`);toast("Moved "+from+" to "+to);render()}
 // ---- customers, log, view, show picker
-function renderCust(){const t=document.getElementById("cust");const lf=n=>{n=n.trim();const i=n.lastIndexOf(" ");return i<0?n:n.slice(i+1)+", "+n.slice(0,i)};const q=(document.getElementById("custQ").value||"").trim().toLowerCase();
+function renderCust(){const t=document.getElementById("cust");const sc=t.parentNode,st0=sc?sc.scrollTop:0;const lf=n=>{n=n.trim();const i=n.lastIndexOf(" ");return i<0?n:n.slice(i+1)+", "+n.slice(0,i)};const q=(document.getElementById("custQ").value||"").trim().toLowerCase();
  const rows=Object.values(S.cust).map(c=>({c,d:lf(c.name)})).filter(r=>{if(!q)return true;const hay=(r.d+" "+r.c.name+" "+r.c.email+" "+r.c.phone).toLowerCase(),pd=String(r.c.phone||"").replace(/\D/g,""),sq=x=>x.replace(/(.)\1+/g,"$1"),hs=sq(hay);return q.split(/\s+/).every(t=>hay.includes(t)||hs.includes(sq(t))||(t.replace(/\D/g,"").length>=3&&pd.includes(t.replace(/\D/g,""))))}).sort((x,y)=>S.cs==="e"?(y.c.ed||0)-(x.c.ed||0):x.d.localeCompare(y.d)).map(r=>Object.assign({},r.c,{disp:r.d}));
  const det=(c,di)=>{const k=ck(c),out={};SHOWS.forEach((s,si)=>{if(s[0]!==di)return;const sh=S.shows[si];Object.entries(sh.seats).forEach(([id,x])=>{if(x&&x.guest&&ck(x.guest)===k){const o=x.order||"-";(out[o]=out[o]||[]).push(id)}})});return Object.entries(out).map(([o,a])=>"Order "+o+": "+a.join(", ")).join("; ")};
- t.innerHTML="<tr><th>Guest</th><th>Contact, shows and seats</th></tr>"+rows.map(c=>`<tr><td>${c.disp}</td><td>${c.phone}<br>${c.email}<div style='font-size:12px;margin-top:3px'>${Object.entries(c.shows).map(([d,n])=>"<b>"+fmt(d)+" x"+n+"</b> "+det(c,d)).join("<br>")}</div></td></tr>`).join("")+(rows.length?"":"<tr><td colspan=2>No match</td></tr>")}
+ t.innerHTML="<tr><th>Guest</th><th>Contact, shows and seats</th></tr>"+rows.map(c=>`<tr><td>${c.disp}</td><td>${c.phone}<br>${c.email}<div style='font-size:12px;margin-top:3px'>${Object.entries(c.shows).map(([d,n])=>"<b>"+fmt(d)+" x"+n+"</b> "+det(c,d)).join("<br>")}</div></td></tr>`).join("")+(rows.length?"":"<tr><td colspan=2>No match</td></tr>");if(sc)sc.scrollTop=st0}
 document.getElementById("custQ").oninput=renderCust;
 const cSet=m=>{S.cs=m;cSortN.style.background=m==="e"?"#fff":"#2f6bff";cSortN.style.color=m==="e"?"#000":"#fff";cSortE.style.background=m==="e"?"#2f6bff":"#fff";cSortE.style.color=m==="e"?"#fff":"#000";renderCust()};cSortN.onclick=()=>cSet("n");cSortE.onclick=()=>cSet("e");cSet("n");
 function renderLog(){document.getElementById("log").innerHTML=S.log.map(l=>"<div>"+l+"</div>").join("")}
@@ -364,13 +369,17 @@ async function applyRole(){try{const u=await(await sfetch(SB+"/auth/v1/user",{he
 /* ---- Staff presence panel: green = active session, red = not logged in ---- */
 var PRES=[];
 function escp(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function renderPres(){var c=document.getElementById("presCard");if(!c)return;var show=LOGGED&&!DOOR&&S.view==="admin";c.style.display=show?"block":"none";if(!show)return;var now=Date.now();c.innerHTML=(PRES.length?PRES:[{name:window.ACTOR||"me",at:new Date().toISOString()}]).map(function(p){var on=p.at&&(now-new Date(p.at).getTime())<90000;return '<div class="pr"><span class="dot '+(on?"on":"off")+'"></span>'+escp(p.name)+'</div>'}).join("")}
+function renderPres(){var c=document.getElementById("presCard");if(!c)return;var show=LOGGED&&!DOOR&&S.view==="admin";c.style.display=show?"block":"none";if(!show)return;var now=Date.now();var list=(PRES.length?PRES:[{name:window.ACTOR||"me",at:new Date().toISOString()}]);
+ var dots=function(p){var on=p.at&&(now-new Date(p.at).getTime())<90000;return '<span class="dot '+(on?"on":"off")+'"></span>'};
+ if(c.classList.contains("mini")){c.innerHTML='<div class="prdots" title="Staff presence - tap for details">'+list.map(function(p){return '<span class="prc">'+dots(p)+escp(p.name)+'</span>'}).join("")+'</div>'}
+ else{c.innerHTML='<div class="prhd">Staff (tap to fold)</div>'+list.map(function(p){return '<div class="pr">'+dots(p)+escp(p.name)+'</div>'}).join("")}}
+document.getElementById("presCard").onclick=function(){this.classList.toggle("mini");renderPres()};
 async function presTick(){if(!LOGGED||DOOR||S.view!=="admin"){renderPres();return}var id=(window.ACTEM||window.ACTOR||"").toLowerCase();if(!id){renderPres();return}
  try{await rq("presence",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:id,name:window.ACTOR||id,at:new Date().toISOString()})})}catch(e){}
  try{const r=await rq("presence?select=id,name,at&order=name");if(r.ok)PRES=await r.json()}catch(e){}
  renderPres()}
 setInterval(presTick,20000);
-const _r2=render;render=function(){_r2.apply(this,arguments);renderPres()};
+const _r2=render;render=function(){var sx=window.scrollX,sy=window.scrollY;_r2.apply(this,arguments);renderPres();window.scrollTo(sx,sy)};
 /* ---- Undo: reverse the most recent seating change (admin view) ---- */
 var UNDO=[];
 function snapState(){return JSON.stringify(S.shows.map(function(sh){return{seats:sh.seats,closed:Array.from(sh.closed)}}))}
