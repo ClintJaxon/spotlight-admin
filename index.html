@@ -300,7 +300,7 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
   const pk=document.createElement("div");pk.id="rfPick";pk.style.cssText="margin-top:8px;padding:10px;border:3px solid #c0392b;border-radius:10px;background:#fff3f0;width:100%";
   pk.innerHTML='<div style="font-weight:bold;margin-bottom:6px">Cancel / refund: which seats? This frees the seats for resale.</div>'+ids.map(id=>'<label style="display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0;font-size:20px;white-space:nowrap"><input type="checkbox" class="rfPickC" value="'+id+'" checked style="width:24px;height:24px;margin:0;flex:none">Seat '+id.split("-").pop()+'</label>').join("");
   const selIds=()=>[].slice.call(pk.querySelectorAll(".rfPickC")).filter(c=>c.checked).map(c=>c.value);
-  const allCash=()=>{const sel=selIds();return sel.length&&sel.every(id=>sh.seats[id]&&sh.seats[id].st==="cash")};
+  const allCash=()=>{const sel=selIds();return sel.length&&sel.every(id=>{const x=sh.seats[id];return x&&(x.st==="cash"||x.tender!=="card")})};
   const brow=document.createElement("div");brow.style.cssText="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap";
   const cf=document.createElement("button");cf.className="warn";
   const cc=document.createElement("button");cc.className="warn";
@@ -315,7 +315,7 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
   paint3();
   if(rfBtn)rfBtn.insertAdjacentElement("afterend",pk);else b.appendChild(pk);
   setTimeout(()=>{try{pk.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},50)},"warn")}
-function doRefund(si,ids,label,method){if(DOOR)return;markUndo();const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const wasCash=ids.every(id=>sh.seats[id]&&sh.seats[id].st==="cash");
+function doRefund(si,ids,label,method){if(DOOR)return;markUndo();const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const wasCash=ids.every(id=>{const x=sh.seats[id];return x&&(x.st==="cash"||x.tender!=="card")});
  const amt=ids.reduce((a,id)=>a+owed(sh.seats[id]),0);ids.forEach(id=>{const x=sh.seats[id];touchC(x);if(x&&x.guest){const c=S.cust[ck(x.guest)],d=SHOWS[si][0];if(c&&c.shows[d]){c.shows[d]--;if(c.shows[d]<=0)delete c.shows[d]}}delete sh.seats[id]});
  const how=wasCash?("Cancelled cash "+label+" - cash handed back if taken"):(method==="cash"?("Refunded $"+amt+" in cash at the table - "+label):("Refunded $"+amt+" to card (demo) - "+label));
  log(how+(g?" ("+g.name+")":"")+" for "+SHOWS[si][0]+" - seats open again");
