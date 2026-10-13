@@ -35,7 +35,7 @@ h3{margin:4px 0 6px}.small{font-size:14px;color:#555}
 #fh,#tender{width:100%;display:block;margin-top:10px;padding:12px;font-size:24px;box-sizing:border-box}#fh{margin-bottom:14px}
 #tmode.on{background:#2f7bff;color:#fff}
 header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size:16px}
-#modal #moreBlock{display:block !important}#more2{width:100%;display:block;margin-top:10px;padding:12px;font-size:24px;box-sizing:border-box}#moreBlock{margin-bottom:14px}
+#modal #moreBlock{display:block !important}#modal #moreRow{display:none !important}#more2{width:100%;display:block;margin-top:10px;padding:12px;font-size:24px;box-sizing:border-box}#moreBlock{margin-bottom:14px}
 #presCard .prow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;margin-top:6px;font-size:14px}
 #presCard .prow.on{background:#e5f9ec;border:2px solid #2ee36a}
 #presCard .prow.off{background:#fdeaea;border:2px solid #e04545}
@@ -64,7 +64,6 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
 </section>
 <aside>
  <div class="card" id="cartCard"><h3>Cart <span id="timer" class="small"></span></h3><div id="cart" class="small">Empty. Tap bright seats.</div>
-  <div class="row"><select id="more" style="flex:1"><option value="">Interested in more shows?</option></select></div>
   <div class="row"><button class="pri" id="goCheckout" style="display:none">Fill in my info and check out</button></div>
   <div id="form" style="display:none">
    <label>First name *<input id="fn"></label><label>Last name *<input id="ln"></label><label>Phone *<input id="fp" inputmode="tel"></label><label>Email *<input id="fe" inputmode="email"></label>
@@ -72,6 +71,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
    <label>Where do you call Home?<input id="fw"></label><label>Where is your Home away from Home? / Which Park?<input id="fa"></label>
    <label>How did you hear about us?<select id="fh"><option value="">Choose one...</option><option>Google</option><option>Newspaper</option><option>Poster</option><option>Friends</option><option>White Sheets</option><option>Radio</option></select></label>
    <div id="moreBlock" style="display:none"><label>Interested in more shows?<select id="more2"><option value="">Choose a show...</option></select></label></div>
+   <div class="row" id="moreRow"><select id="more" style="flex:1"><option value="">Interested in more shows?</option></select></div>
    <div class="row"><button class="pri" id="pay" style="font-size:22px;padding:14px 20px">Check out</button></div></div>
   <div class="small" id="total"></div>
  </div>
