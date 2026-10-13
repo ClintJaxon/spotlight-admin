@@ -55,8 +55,8 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
  <div class="card">
   <div class="row"><label style="margin:0">Show:</label><select id="show"></select>
    <span id="admTools" style="display:none" class="row">
-    <button id="tmode">Switch single tables ON/OFF: off</button> <button id="undoB" disabled title="Reverse the last seating change">Undo</button>
-    <span style="flex-basis:100%;height:0"></span><span class="small">(Single tables: turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
+    <button id="tmode">Tables: off</button> <button id="undoB" disabled title="Reverse the last seating change">Undo</button>
+    <span style="flex-basis:100%;height:0"></span><span class="small">(Tables: turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
   <div class="legend"><span><i style="background:var(--avail)"></i>Available</span><span><i style="background:var(--sel)"></i>Yours (selected)</span><span><i style="background:var(--held)"></i>Held by someone (15 min)</span><span id="lgCash"><i style="background:var(--cash)"></i>Cash - waiting for payment</span><span><i style="background:var(--sold)"></i>Sold (dark + X)</span><span><i style="background:#cfc8b5"></i>Table closed</span></div>
   <div class="mapwrap"><svg id="map" viewBox="20 40 1040 700"></svg></div>
   <div class="small" id="hint"></div>
@@ -145,7 +145,7 @@ function render(){
  renderCart();renderCust();renderPanel();if(M.t)renderModal();
  document.getElementById("hint").textContent=S.view==="admin"?"Debbie: tap a seat to see who is in it (shown just below this map). Tap a table to zoom in. To move a guest, press and drag their dark seat onto an open seat at any table (or onto another dark seat to swap).":"Tap a table to open it big on your screen and pick seats. Seats you pick are held for 15 minutes.";
 }
-document.getElementById("tmode").onclick=function(){S.tmode=!S.tmode;this.textContent="Switch single tables ON/OFF: "+(S.tmode?"ON - tap tables":"off");this.classList.toggle("on",S.tmode)};
+document.getElementById("tmode").onclick=function(){S.tmode=!S.tmode;this.textContent="Tables: "+(S.tmode?"on":"off");this.classList.toggle("on",S.tmode)};
 function toggleClosed(t){if(DOOR)return;const c=S.shows[S.show].closed;const sold=seatsOf(t).some(i=>["sold","cash"].includes(seatState(S.show,i).st));
  if(!c.has(t)&&sold){toast("Can't close "+t+": it has guests seated.");return}
  markUndo();c.has(t)?c.delete(t):c.add(t);log((c.has(t)?"Closed ":"Opened ")+t+" for "+SHOWS[S.show][0]);render()}
@@ -458,15 +458,11 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
  const iv=document.getElementById("inviteCard");if(iv)iv.insertAdjacentElement("afterend",c);
  document.getElementById("compChg").onclick=function(){compShow("change")};
  document.getElementById("compFgt").onclick=function(){compShow("forgot")}})();
-/* Practice reset card (Debbie): clears the PRACTICE seating store only, so she can practice selling from a clean floor. Hardcoded to seat_assignments + REAL guard - can never reach real event data (door_seats). Visible in admin AND POS views (not guest). */
-(function(){const c=document.createElement("div");c.className="card";c.id="resetCard";c.style.cssText="margin:12px 0;display:none;border:3px dashed #c98a00";
- c.innerHTML='<h3>Reset practice seating</h3><div class="small">Wipes every practice sale, hold, comp and check-in on every show, so you can practice selling again from a clean floor. Tables, shows, invites and the comp PIN all stay. This only ever clears the practice seating store - it cannot touch real event data.</div><div style="margin-top:8px"><button id="resetGo" class="warn" style="font-size:18px;padding:10px 16px">Reset practice seating</button></div>';
- const ap=document.getElementById("adminPanel");if(ap)ap.insertAdjacentElement("afterend",c);
- function rstVis(){c.style.display=(!REAL&&LOGGED&&S.view!=="guest")?"block":"none"}
- const _svR=setView;setView=function(){_svR.apply(this,arguments);rstVis()};rstVis();
- document.getElementById("resetGo").onclick=async function(){if(REAL){toast("Practice reset is not available on live event data.");return}
+/* Practice reset button (Debbie): sits beside Undo. Clears the PRACTICE seating store only, hardcoded to seat_assignments + REAL guard - can never reach real event data (door_seats). One confirm, same style as cancel-user. */
+(function(){const u=document.getElementById("undoB");if(!u)return;const b=document.createElement("button");b.id="resetGo";b.textContent="Reset practice";b.title="Wipe every practice sale, hold, comp and check-in on every show, so practice can start over. Practice data only - cannot touch real event data.";b.className="warn";u.insertAdjacentElement("afterend",b);
+ b.onclick=async function(){if(REAL){toast("Practice reset is not available on live event data.");return}
   if(!window.confirm("Reset ALL practice seating?\n\nEvery practice sale, hold, comp and check-in on every show will be cleared - tables and shows stay.\n\nTap OK to reset, or Cancel to keep everything."))return;
-  const b=this;lbl=b.textContent;b.disabled=true;b.textContent="Resetting...";
+  b.disabled=true;const lbl=b.textContent;b.textContent="Resetting...";
   try{const r=await rq("seat_assignments?show_id=not.is.null",{method:"DELETE",headers:{Prefer:"return=representation"}});if(!r.ok)throw new Error("delete failed ("+r.status+")");
    const gone=(await r.json().catch(()=>[]))||[];
    try{await rq("change_log",{method:"POST",body:JSON.stringify([{actor:window.ACTOR||"",action:"PRACTICE RESET: cleared all practice seating ("+gone.length+" seats) so practice can start over",show_id:null}])})}catch(e2){}
@@ -487,7 +483,7 @@ if(window.ResizeObserver){new ResizeObserver(sync).observe(mc)}window.addEventLi
 
 (function(){const vP=document.createElement("button");vP.id="vPos";vP.textContent="POS View";const wrap=document.createElement("span");wrap.id="viewSw";wrap.style.cssText="display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:8px;vertical-align:middle";document.getElementById("show").insertAdjacentElement("afterend",wrap);[vAdmin,vP,vGuest].forEach(b=>{b.style.cssText="padding:8px 12px;font-size:16px;border:2px solid #222;border-radius:8px";wrap.appendChild(b)});vAdmin.textContent="Debbie's View";vGuest.textContent="Guest View";
 
-function mode(m){if(window.__idleMode)window.__idleMode(m);S.tmode=false;var _tb=document.getElementById("tmode");if(_tb){_tb.textContent="Switch single tables ON/OFF: off";_tb.classList.remove("on")}DOOR=(m==="pos")||REAL;document.body.classList.toggle("door",DOOR);setView(m==="guest"?"guest":"admin");[["vAdmin","admin"],["vPos","pos"],["vGuest","guest"]].forEach(([i,k])=>document.getElementById(i).className=k===m?"on":"");S.sel=null;S.cart=[];clearForm();render()}function exportCsv(){var q=function(v){v=v==null?"":String(v);if(/^[=@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};var rows=[["Show date","Show","Table","Seat","Status","Paid by","Order","Guest name","Phone","Email","Card last four","Heard about us","Home","Home away from home / Park"]];SHOWS.forEach(function(sh,si){var seats=S.shows[si].seats;Object.keys(seats).sort(function(a,b){var A=a.split("-"),B=b.split("-");return A[0]===B[0]?A[1]-B[1]:A[0].localeCompare(B[0],undefined,{numeric:true})}).forEach(function(id){var x=seats[id],g=x.guest||{},p=id.split("-");rows.push([sh[0],sh[1],p[0],p[1],x.st==="cash"?"Cash - waiting for payment":x.st,x.tender||"",x.order||"",g.name,fmtPh(g.phone),g.email,x.last4||"",g.how,g.where,g.away])})});var csv="\ufeff"+rows.map(function(r){return r.map(q).join(",")}).join("\r\n");var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="spotlight-customers-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);toast("Downloaded "+(rows.length-1)+" seats")}(function(){var b=document.createElement("button");b.id="dlCsv";b.textContent="Download customer data (spreadsheet)";b.onclick=exportCsv;var c=document.getElementById("cust").closest(".card"),w=document.createElement("div");w.className="admOnly";w.style.cssText="margin-top:8px";w.appendChild(b);c.parentNode.insertBefore(w,c.nextSibling)})();
+function mode(m){if(window.__idleMode)window.__idleMode(m);S.tmode=false;var _tb=document.getElementById("tmode");if(_tb){_tb.textContent="Tables: off";_tb.classList.remove("on")}DOOR=(m==="pos")||REAL;document.body.classList.toggle("door",DOOR);setView(m==="guest"?"guest":"admin");[["vAdmin","admin"],["vPos","pos"],["vGuest","guest"]].forEach(([i,k])=>document.getElementById(i).className=k===m?"on":"");S.sel=null;S.cart=[];clearForm();render()}function exportCsv(){var q=function(v){v=v==null?"":String(v);if(/^[=@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};var rows=[["Show date","Show","Table","Seat","Status","Paid by","Order","Guest name","Phone","Email","Card last four","Heard about us","Home","Home away from home / Park"]];SHOWS.forEach(function(sh,si){var seats=S.shows[si].seats;Object.keys(seats).sort(function(a,b){var A=a.split("-"),B=b.split("-");return A[0]===B[0]?A[1]-B[1]:A[0].localeCompare(B[0],undefined,{numeric:true})}).forEach(function(id){var x=seats[id],g=x.guest||{},p=id.split("-");rows.push([sh[0],sh[1],p[0],p[1],x.st==="cash"?"Cash - waiting for payment":x.st,x.tender||"",x.order||"",g.name,fmtPh(g.phone),g.email,x.last4||"",g.how,g.where,g.away])})});var csv="\ufeff"+rows.map(function(r){return r.map(q).join(",")}).join("\r\n");var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="spotlight-customers-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);toast("Downloaded "+(rows.length-1)+" seats")}(function(){var b=document.createElement("button");b.id="dlCsv";b.textContent="Download customer data (spreadsheet)";b.onclick=exportCsv;var c=document.getElementById("cust").closest(".card"),w=document.createElement("div");w.className="admOnly";w.style.cssText="margin-top:8px";w.appendChild(b);c.parentNode.insertBefore(w,c.nextSibling)})();
 vAdmin.onclick=()=>mode("admin");vP.onclick=()=>mode("pos");vGuest.onclick=()=>mode("guest");
 const _ar=applyRole;applyRole=async function(){await _ar();REAL=DOOR;wrap.style.display=REAL?"none":"inline-flex";vAdmin.style.display="";vP.style.display="";vGuest.style.display="";if(!REAL)mode("admin")};
 })();
@@ -657,9 +653,9 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
   })();
 })();
 </script><script>
-// POS idle revert: after 30 seconds without interaction, POS view returns to Debbie's admin view. Any tap, click, key or scroll restarts the clock, so nobody gets bounced mid-sale.
+// POS idle revert: after 60 seconds without interaction, POS view returns to Debbie's admin view. Any tap, click, key or scroll restarts the clock, so nobody gets bounced mid-sale.
 (function(){
-  var IDLE_MS=30000,t=null;
+  var IDLE_MS=60000,t=null;
   function stop(){if(t){clearTimeout(t);t=null}}
   function arm(){stop();t=setTimeout(function(){t=null;document.getElementById("vAdmin").click()},IDLE_MS)}
   window.__idleMode=function(m){stop();if(m==="pos")arm()};
