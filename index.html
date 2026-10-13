@@ -292,7 +292,7 @@ document.getElementById("custQ").oninput=renderCust;
 const cSet=m=>{S.cs=m;cSortN.style.background=m==="e"?"#fff":"#2f6bff";cSortN.style.color=m==="e"?"#000":"#fff";cSortE.style.background=m==="e"?"#2f6bff":"#fff";cSortE.style.color=m==="e"?"#fff":"#000";renderCust()};cSortN.onclick=()=>cSet("n");cSortE.onclick=()=>cSet("e");cSet("n");
 function renderLog(){document.getElementById("log").innerHTML=S.log.map(l=>"<div>"+l+"</div>").join("")}
 const sel=document.getElementById("show");SHOWS.forEach((s,i)=>sel.add(new Option(fmt(s[0])+" - "+s[1],i)));sel.onchange=()=>{S.show=+sel.value;S.sel=null;render()};
-function setView(v){S.view=v;vGuest.className=v==="guest"?"on":"";vAdmin.className=v==="admin"?"on":"";admTools.style.display=v==="admin"?"inline-flex":"none";lgCash.style.display=v==="admin"?"inline":"none";document.querySelectorAll(".admOnly").forEach(e=>e.style.display=v==="admin"?"block":"none");document.getElementById("cartCard").style.display=(v==="admin"&&!DOOR)?"none":"";render()}
+function setView(v){S.view=v;vGuest.className=v==="guest"?"on":"";vAdmin.className=v==="admin"?"on":"";admTools.style.display=v==="admin"?"inline-flex":"none";lgCash.style.display=v==="admin"?"inline":"none";document.querySelectorAll(".admOnly").forEach(e=>e.style.display=v==="admin"?"block":"none");document.getElementById("cartCard").style.display=(v==="admin"&&!document.body.classList.contains("door"))?"none":"";render()}
 vGuest.onclick=()=>setView("guest");vAdmin.onclick=()=>setView("admin");
 sel.value=0;setView("admin");vGuest.style.display="none";vAdmin.style.display="none";sweep();
 
