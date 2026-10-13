@@ -450,7 +450,7 @@ document.getElementById("ivGo").onclick=async()=>{const m=document.getElementByI
 document.getElementById("lgGo").onclick=doLogin;document.getElementById("lgPw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
 
 (function(){const mc=document.getElementById("map").closest(".card"),lc=document.getElementById("log").closest(".card"),cust=document.getElementById("cust"),cc=cust.closest(".card"),w=cust.parentNode;
-mc.parentNode.appendChild(lc);lc.style.marginTop="12px";
+mc.parentNode.appendChild(lc);lc.style.marginTop="12px";var pc0=document.getElementById("presCard");if(pc0)lc.parentNode.insertBefore(pc0,lc.nextSibling);
 function sync(){if(!cc.offsetParent||!mc.offsetHeight)return;if(window.innerWidth<=900){w.style.maxHeight="360px";return}w.style.maxHeight="0px";const others=cc.offsetHeight;w.style.maxHeight=Math.max(120,mc.offsetHeight-others)+"px"}
 if(window.ResizeObserver){new ResizeObserver(sync).observe(mc)}window.addEventListener("resize",sync);setInterval(sync,1500);sync()})();
 
