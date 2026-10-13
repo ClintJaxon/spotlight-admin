@@ -344,7 +344,7 @@ async function pushOnce(){
 async function push(){if(pushing){dirty=true;return}pushing=true;try{let n=0;do{dirty=false;const f=await pushOnce();if(f){clearTimeout(pushT);pushT=setTimeout(schedPush,5000);break}}while(dirty&&++n<5)}finally{pushing=false}}
 function schedPush(){if(!LOGGED)return;clearTimeout(pushT);pushT=setTimeout(push,300)}
 const _render=render;render=function(){_render.apply(this,arguments);schedPush()};
-setInterval(()=>{if(!LOGGED||pushing||pushT||S.drag||document.hidden)return;const a=document.activeElement;if(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)&&a.id!=="custQ"&&a.id!=="ciQ")return;load().catch(()=>{})},6000);
+setInterval(()=>{if(!LOGGED||pushing||pushT||S.drag||document.hidden)return;const a=document.activeElement;if(a&&((a.tagName==="INPUT"&&!/^(checkbox|radio|button|submit|range|file|color)$/.test(a.type))||a.tagName==="TEXTAREA")&&a.id!=="custQ"&&a.id!=="ciQ")return;load().catch(()=>{})},2000); // 2s refresh so holds/sales from other devices appear near-immediately; only pauses while typing in a text field
 async function auth(body,grant){const r=await sfetch(SB+"/auth/v1/token?grant_type="+grant,{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||"Sign-in failed");TOK=j.access_token;RT=j.refresh_token}
 setInterval(async()=>{if(!LOGGED||!RT)return;try{await auth({refresh_token:RT},"refresh_token")}catch(e){showLogin("Session ended. Sign in again.")}},45*60*1000);
 function showLogin(msg){LOGGED=false;document.getElementById("lg").style.display="flex";document.getElementById("lgErr").textContent=msg||""}
