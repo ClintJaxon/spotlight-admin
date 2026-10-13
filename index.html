@@ -327,8 +327,9 @@ function toDB(s){const d=Object.assign({},s);if(d.by==="me")d.by=SID;else if(d.b
 function fromDB(d){const s=Object.assign({},d);if(s.by){s.raw=s.by;s.by=(s.by===SID?"me":"other")}return s}
 function healCart(){const b=JSON.stringify(S.cart);S.cart=S.cart.filter(c=>{const o=S.shows[c.show]&&S.shows[c.show].seats[c.seat];return o&&o.st==="held"&&o.by==="me"});S.shows.forEach((sh2,si2)=>{for(const id2 in sh2.seats){const o2=sh2.seats[id2];if(o2.st==="held"&&o2.by==="me"&&!S.cart.some(c=>c.show===si2&&c.seat===id2))S.cart.push({show:si2,seat:id2})}});return JSON.stringify(S.cart)!==b}
 async function load(force){if(loading)return;loading=true;try{
- const shows=await gAll("shows?select=id,show_date&order=show_date");DBSHOW={};const idxOf={};
+ const shows=await gAll("shows?select=id,show_date,artist&order=show_date");DBSHOW={};const idxOf={};
  if(!shows.length){loading=false;showLogin("Please sign in again (security update).");return}
+ shows.forEach(r=>{if(!SHOWS.some(s=>s[0]===r.show_date)){SHOWS.push([r.show_date,r.artist||"New show"]);if(window.__addShowOpts)window.__addShowOpts(SHOWS.length-1)}});
  shows.forEach(r=>{const i=SHOWS.findIndex(s=>s[0]===r.show_date);if(i>=0){DBSHOW[i]=r.id;idxOf[r.id]=i}});
  const [seats,closed,logs]=await Promise.all([gAll((REAL?"door_seats":"seat_assignments")+"?select=show_id,table_id,seat_no,data,updated_at&order=show_id,table_id,seat_no"),gAll("closed_tables?select=show_id,table_id&order=show_id,table_id"),(REAL?Promise.resolve([]):rq("change_log?select=at,actor,action&order=id.desc&limit=100").then(r=>r.json()))]);
  const sig=JSON.stringify([seats,closed,logs]);if(!force&&sig===lastSig){if(healCart())renderCart();return}lastSig=sig;
@@ -696,5 +697,61 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
   window.__idleMode=function(m){stop();if(m==="pos")arm()};
 
   ["pointerdown","touchstart","keydown","wheel"].forEach(function(ev){document.addEventListener(ev,function(){if(t)arm()},true)});
+})();
+</script><script>
+/* Add a show (Debbie): "+ Add a show..." at the bottom of the show dropdown. Saves to the shows table, optional poster art stored in settings and shown on the guest view. */
+(function(){
+ var sel=document.getElementById("show");if(!sel)return;
+ function optLbl(i){return fmt(SHOWS[i][0])+" - "+SHOWS[i][1]}
+ window.__addShowOpts=function(i){var lbl=optLbl(i);
+  if(sel){var addOpt=[].slice.call(sel.options).find(function(o){return o.value==="add"});var o=new Option(lbl,i);if(addOpt)sel.add(o,addOpt.index);else sel.add(o)}
+  ["more","more2"].forEach(function(id){var sl=document.getElementById(id);if(sl&&sl.options[1])sl.add(new Option(lbl,i))})};
+ if(![].slice.call(sel.options).some(function(o){return o.value==="add"}))sel.add(new Option("+ Add a show...","add"));
+ sel.parentElement.addEventListener("change",function(e){if(e.target===sel&&sel.value==="add"){e.stopPropagation();e.preventDefault();sel.value=S.show;if(S.view==="admin"&&!DOOR)openAdd();else toast("Shows are added from Debbie's view.")}},true);
+ var bub=document.createElement("div");bub.id="addShowBub";bub.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40003;display:none;align-items:center;justify-content:center;padding:16px";
+ bub.innerHTML='<div style="background:#fff8e8;border-radius:14px;padding:18px;width:min(420px,94vw);max-height:90vh;overflow:auto"><h3 style="margin:0 0 8px">Add a show</h3>'
+  +'<label style="display:block;margin:8px 0">Date<br><input id="asDate" type="date" style="width:100%;font-size:18px;padding:8px;box-sizing:border-box"></label>'
+  +'<label style="display:block;margin:8px 0">Artist / show name<br><input id="asName" type="text" placeholder="e.g. A Country Christmas" style="width:100%;font-size:18px;padding:8px;box-sizing:border-box"></label>'
+  +'<div class="small" style="margin:4px 0">Tickets are $35 ($24 dinner + $11 show), same as every show.</div>'
+  +'<label style="display:block;margin:8px 0">Poster art (optional)<br><input id="asFile" type="file" accept="image/*" style="width:100%;box-sizing:border-box"></label>'
+  +'<img id="asPrev" style="display:none;max-width:100%;border-radius:8px;margin-top:6px">'
+  +'<div id="asMsg" style="color:#c0392b;min-height:20px;font-size:14px;margin-top:6px"></div>'
+  +'<div style="display:flex;gap:8px;margin-top:10px"><button id="asGo" class="pri" style="flex:1">Add show</button><button id="asX">Cancel</button></div></div>';
+ document.body.appendChild(bub);
+ bub.addEventListener("click",function(e){if(e.target===bub)bub.style.display="none"});
+ var posterData=null;
+ function openAdd(){posterData=null;document.getElementById("asDate").value="";document.getElementById("asName").value="";document.getElementById("asFile").value="";document.getElementById("asPrev").style.display="none";document.getElementById("asMsg").textContent="";bub.style.display="flex"}
+ document.getElementById("asX").onclick=function(){bub.style.display="none"};
+ document.getElementById("asFile").onchange=function(e){var f=e.target.files&&e.target.files[0];if(!f){posterData=null;return}
+  var rd=new FileReader();rd.onload=function(){var img=new Image();img.onload=function(){var c=document.createElement("canvas");var sc=Math.min(1,600/img.width);c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext("2d").drawImage(img,0,0,c.width,c.height);posterData=c.toDataURL("image/jpeg",0.82);var pv=document.getElementById("asPrev");pv.src=posterData;pv.style.display="block"};img.src=rd.result};rd.readAsDataURL(f)};
+ document.getElementById("asGo").onclick=async function(){
+  var d=document.getElementById("asDate").value,nm=document.getElementById("asName").value.trim(),msg=document.getElementById("asMsg");
+  if(!d){msg.textContent="Pick a date.";return}
+  if(!nm){msg.textContent="Type the artist or show name.";return}
+  if(SHOWS.some(function(s){return s[0]===d})){msg.textContent="There is already a show on that date - pick another.";return}
+  var go=this;go.disabled=true;msg.textContent="Adding...";
+  try{
+   var r=await rq("shows",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({show_date:d,artist:nm})});
+   if(!r.ok)throw new Error("save failed ("+r.status+")");
+   var j=await r.json(),sid=j[0]&&j[0].id;
+   if(posterData&&sid){try{await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"poster_"+sid,value:posterData})});window.__posters[sid]=posterData}catch(e2){}}
+   SHOWS.push([d,nm]);window.__addShowOpts(SHOWS.length-1);
+   log("Added show: "+nm+" - "+d+(posterData?" (with poster)":""));
+   bub.style.display="none";
+   await load(true);
+   var ni=SHOWS.length-1;S.show=ni;sel.value=ni;S.sel=null;render();
+   toast("Show added: "+fmt(d)+" - "+nm)
+  }catch(e){msg.textContent="Could not add it: "+(e.message||e)}
+  go.disabled=false};
+ // poster art on the guest view
+ window.__posters={};
+ var pimg=null;
+ function paintPoster(){if(!pimg){var lg=document.querySelector(".legend");if(!lg)return;pimg=document.createElement("img");pimg.id="showPoster";pimg.style.cssText="display:none;width:100%;border-radius:10px;margin:0 0 10px";lg.parentElement.insertBefore(pimg,lg)}
+  var sid=window.DBSHOW&&DBSHOW[S.show],u=sid&&window.__posters[sid];
+  if(S.view==="guest"&&u){pimg.src=u;pimg.style.display="block"}else pimg.style.display="none"}
+ var _ld=load;load=async function(){await _ld.apply(this,arguments);
+  try{var r=await rq("settings?select=key,value&key=like.poster_*");var j=await r.json();(j||[]).forEach(function(row){window.__posters[row.key.slice(7)]=row.value})}catch(e){}
+  paintPoster()};
+ var _rn=render;render=function(){_rn.apply(this,arguments);paintPoster()};
 })();
 </script></body></html>
