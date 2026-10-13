@@ -479,8 +479,8 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
  document.getElementById("compChg").onclick=function(){compShow("change")};
  document.getElementById("compFgt").onclick=function(){compShow("forgot")}})();
 /* Practice reset button (Debbie): sits beside Undo. Clears the PRACTICE seating store only, hardcoded to seat_assignments + REAL guard - can never reach real event data (door_seats). One confirm, same style as cancel-user. */
-(function(){const u=document.getElementById("undoB");if(!u)return;const b=document.createElement("button");b.id="resetGo";b.textContent="Reset practice";b.title="Wipe every practice sale, hold, comp and check-in on every show, so practice can start over. Practice data only - cannot touch real event data.";b.className="warn";u.insertAdjacentElement("afterend",b);
- const _svRst=setView;setView=function(){_svRst.apply(this,arguments);b.style.display=REAL?"none":""};b.style.display=REAL?"none":"";
+(function(){const u=document.getElementById("show");if(!u)return;const b=document.createElement("button");b.id="resetGo";b.textContent="Reset practice";b.title="Wipe every practice sale, hold, comp and check-in on every show, so practice can start over. Practice data only - cannot touch real event data.";b.className="warn";u.insertAdjacentElement("afterend",b);
+ const _svRst=setView;setView=function(){_svRst.apply(this,arguments);b.style.display=(REAL||S.view!=="admin")?"none":""};b.style.display=(REAL||S.view!=="admin")?"none":"";
  b.onclick=async function(){if(REAL){toast("Practice reset is not available on live event data.");return}
   if(!window.confirm("Reset ALL practice seating?\n\nEvery practice sale, hold, comp and check-in on every show will be cleared - tables and shows stay.\n\nTap OK to reset, or Cancel to keep everything."))return;
   b.disabled=true;const lbl=b.textContent;b.textContent="Resetting...";
@@ -492,13 +492,13 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
   b.disabled=false;b.textContent=lbl}})();
 /* POS seat-move toggle (admin): lets Debbie allow or lock drag-to-move in the POS view. Saved in settings, default on. */
 (function(){
- const u=document.getElementById("resetGo")||document.getElementById("undoB");if(!u)return;
+ const u=document.getElementById("undoB");if(!u)return;
  const b=document.createElement("button");b.id="posMoveT";
  S.posMove=true;
  function paint(){b.textContent="POS seat moves: "+(S.posMove?"on":"off");b.className=S.posMove?"on":""}
  b.title="Let door staff move seats by dragging in the POS table view. Turn off to lock seat moves to Debbie's view.";
  b.onclick=async function(){S.posMove=!S.posMove;paint();try{await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"pos_move",value:JSON.stringify(S.posMove)})});log("POS seat moves "+(S.posMove?"enabled for door staff":"locked to Debbie's view"))}catch(e){toast("Could not save that setting.")}};
- u.insertAdjacentElement("afterend",b);
+ u.insertAdjacentElement("beforebegin",b);
  (async function(){try{const r=await rq("settings?select=value&key=eq.pos_move");const j=await r.json();if(j[0]&&j[0].value!=null)S.posMove=JSON.parse(j[0].value)}catch(e){}paint()})();
  paint();
 })();
