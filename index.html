@@ -577,7 +577,7 @@ function openBub(p){cur=p;const box=document.getElementById("ciBox"),xs=seatsOfP
  +(p.cash?'<div class="cashbox red" id="cashBox" role="button"><b>NO CASH RECEIVED - COLLECT $'+xs.filter(x=>x.st==="cash").reduce((a,x)=>a+owed(x),0)+'</b><small>Tap here once the cash is in your hand</small></div>'
   :(rcv?'<div class="cashbox got" id="cashBox"><b>CASH RECEIVED</b><small>'+(xs.find(x=>x.rcv).rcv.at?tm(xs.find(x=>x.rcv).rcv.at):"")+'</small></div>':""))
  +(p.ci?'<div class="ln" style="color:#1f8a3a">Checked in '+((p.ciN||0)<p.ids.length?(p.ciN||0)+' of '+p.ids.length+' - ':'')+tm(p.ci)+'</div>':"")
- +'<div class="ln" style="margin:4px 0">Tickets to print:<br>'+p.ids.map(function(id){return '<label style="display:inline-flex;align-items:center;gap:4px;margin:3px 10px 3px 0;font-size:16px"><input type="checkbox" class="ciSeatC" value="'+id+'" checked>'+id+'</label>'}).join("")+'</div>'
+ +'<div class="ln" style="margin:4px 0">Tickets to print:<br>'+p.ids.map(function(id){return '<label style="display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0;font-size:20px;white-space:nowrap"><input type="checkbox" class="ciSeatC" style="width:24px;height:24px;margin:0;flex:none" value="'+id+'" checked>Seat '+id.split("-").pop()+'</label>'}).join("")+'</div>'
 
  +'<button class="go'+(p.ci?" re":"")+'" id="ciGo">'+(p.ci?"REPRINT TIX":"CHECK IN + PRINT TIX")+'</button><div class="sm"><button id="ciX">Close</button>'+(p.ci?'<button id="ciUn">Undo check-in</button>':"")+(p.cash&&!p.ci?'<button id="ciComp">Comp</button>':"")+'</div>';
  const go_=document.getElementById("ciGo"),cb=document.getElementById("cashBox");
