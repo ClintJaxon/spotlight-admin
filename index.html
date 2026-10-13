@@ -54,7 +54,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
  </div>
  <div class="card">
   <div class="row"><label style="margin:0">Show:</label><select id="show"></select>
-   <span id="admTools" style="display:none" class="row">
+   <span style="flex-basis:100%;height:0"></span><span id="admTools" style="display:none" class="row">
     <button id="tmode">Tables: off</button> <button id="undoB" disabled title="Reverse the last seating change">Undo</button>
     <span style="flex-basis:100%;height:0"></span><span class="small">(Tables: turn this on, then tap tables - dashed = off for this show; tap again to turn back on)</span></span></div>
   <div class="legend"><span><i style="background:var(--avail)"></i>Available</span><span><i style="background:var(--sel)"></i>Yours (selected)</span><span><i style="background:var(--held)"></i>Held by someone (15 min)</span><span id="lgCash"><i style="background:var(--cash)"></i>Cash - waiting for payment</span><span><i style="background:var(--sold)"></i>Sold (dark + X)</span><span><i style="background:#cfc8b5"></i>Table closed</span></div>
@@ -460,6 +460,7 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
  document.getElementById("compFgt").onclick=function(){compShow("forgot")}})();
 /* Practice reset button (Debbie): sits beside Undo. Clears the PRACTICE seating store only, hardcoded to seat_assignments + REAL guard - can never reach real event data (door_seats). One confirm, same style as cancel-user. */
 (function(){const u=document.getElementById("undoB");if(!u)return;const b=document.createElement("button");b.id="resetGo";b.textContent="Reset practice";b.title="Wipe every practice sale, hold, comp and check-in on every show, so practice can start over. Practice data only - cannot touch real event data.";b.className="warn";u.insertAdjacentElement("afterend",b);
+ const _svRst=setView;setView=function(){_svRst.apply(this,arguments);b.style.display=REAL?"none":""};b.style.display=REAL?"none":"";
  b.onclick=async function(){if(REAL){toast("Practice reset is not available on live event data.");return}
   if(!window.confirm("Reset ALL practice seating?\n\nEvery practice sale, hold, comp and check-in on every show will be cleared - tables and shows stay.\n\nTap OK to reset, or Cancel to keep everything."))return;
   b.disabled=true;const lbl=b.textContent;b.textContent="Resetting...";
@@ -628,8 +629,8 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
   b.id="vNames";b.type="button";
   function paint(){b.textContent=S.tnames?"Tables: Names":"Tables: #";b.className=S.tnames?"on":""}
   b.onclick=function(){S.tnames=!S.tnames;paint();render()};
-  var wrap=document.getElementById("viewSw");
-  if(wrap){wrap.appendChild(b);paint()}
+  var at=document.getElementById("admTools"),tb=document.getElementById("tmode");
+  if(at&&tb){at.insertBefore(b,tb);b.style.marginRight="6px";paint()}
 })();
 </script><script>
 // Inactivity sign-out: after 2 hours with no interaction anywhere, the app signs itself out back to the login screen. Any tap, click, key or scroll restarts the clock.
