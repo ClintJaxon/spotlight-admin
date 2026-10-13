@@ -306,12 +306,13 @@ async function rq(path,opt){const r=await sfetch(SB+"/rest/v1/"+path,Object.assi
 async function gAll(path){let out=[],off=0;for(;;){const r=await rq(path+"&limit=1000&offset="+off);if(!r.ok)throw new Error("load "+r.status);const j=await r.json();out=out.concat(j);if(j.length<1000)break;off+=1000}return out}
 function toDB(s){const d=Object.assign({},s);if(d.by==="me")d.by=SID;else if(d.by==="other")d.by=s.raw||"other";delete d.raw;return d}
 function fromDB(d){const s=Object.assign({},d);if(s.by){s.raw=s.by;s.by=(s.by===SID?"me":"other")}return s}
+function healCart(){const b=JSON.stringify(S.cart);S.cart=S.cart.filter(c=>{const o=S.shows[c.show]&&S.shows[c.show].seats[c.seat];return o&&o.st==="held"&&o.by==="me"});S.shows.forEach((sh2,si2)=>{for(const id2 in sh2.seats){const o2=sh2.seats[id2];if(o2.st==="held"&&o2.by==="me"&&!S.cart.some(c=>c.show===si2&&c.seat===id2))S.cart.push({show:si2,seat:id2})}});return JSON.stringify(S.cart)!==b}
 async function load(force){if(loading)return;loading=true;try{
  const shows=await gAll("shows?select=id,show_date&order=show_date");DBSHOW={};const idxOf={};
  if(!shows.length){loading=false;showLogin("Please sign in again (security update).");return}
  shows.forEach(r=>{const i=SHOWS.findIndex(s=>s[0]===r.show_date);if(i>=0){DBSHOW[i]=r.id;idxOf[r.id]=i}});
  const [seats,closed,logs]=await Promise.all([gAll((REAL?"door_seats":"seat_assignments")+"?select=show_id,table_id,seat_no,data,updated_at&order=show_id,table_id,seat_no"),gAll("closed_tables?select=show_id,table_id&order=show_id,table_id"),(REAL?Promise.resolve([]):rq("change_log?select=at,actor,action&order=id.desc&limit=100").then(r=>r.json()))]);
- const sig=JSON.stringify([seats,closed,logs]);if(!force&&sig===lastSig)return;lastSig=sig;
+ const sig=JSON.stringify([seats,closed,logs]);if(!force&&sig===lastSig){if(healCart())renderCart();return}lastSig=sig;
  const ns=SHOWS.map(()=>({seats:{},closed:new Set()}));const nsnap={},ncs=new Set(),eds={};
  seats.forEach(r=>{const si=idxOf[r.show_id];if(si==null||!r.data)return;const id=r.table_id+"-"+r.seat_no;ns[si].seats[id]=fromDB(r.data);nsnap[si+"|"+id]=JSON.stringify(r.data);
   const g=r.data.guest;if(g&&g.email&&(r.data.st==="sold"||r.data.st==="cash")){const k=ck(g);eds[k]=Math.max(eds[k]||0,Date.parse(r.updated_at)||0)}});
@@ -320,7 +321,7 @@ async function load(force){if(loading)return;loading=true;try{
  SHOWS.forEach((s,si)=>{for(const id in S.shows[si].seats){const x=S.shows[si].seats[id];if(x.guest&&x.guest.email&&(x.st==="sold"||x.st==="cash"))addCust(x.guest,si)}});
  for(const k in S.cust)S.cust[k].ed=eds[k]||0;
  S.log=logs.map(l=>new Date(l.at).toLocaleTimeString()+" - "+(l.actor?l.actor+": ":"")+l.action);
- S.cart=S.cart.filter(c=>{const o=S.shows[c.show].seats[c.seat];return o&&o.st==="held"&&o.by==="me"});S.shows.forEach((sh2,si2)=>{for(const id2 in sh2.seats){const o2=sh2.seats[id2];if(o2.st==="held"&&o2.by==="me"&&!S.cart.some(c=>c.show===si2&&c.seat===id2))S.cart.push({show:si2,seat:id2})}});
+ healCart();
  renderLog();_render();
 }finally{loading=false}}
 async function pushOnce(){
