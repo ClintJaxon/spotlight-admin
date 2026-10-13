@@ -341,7 +341,7 @@ async function pushOnce(){
  if(conflict){toast("Someone else just took one of those seats. Screen refreshed - please pick again.");lastSig="";await load(true)}
  else if(fail){toast("Could not save - will retry. Check the internet connection.");dirty=true}
  return fail}
-async function push(){if(pushing){dirty=true;return}pushing=true;try{let n=0;do{dirty=false;const f=await pushOnce();if(f){clearTimeout(pushT);pushT=setTimeout(schedPush,5000);break}}while(dirty&&++n<5)}finally{pushing=false}}
+async function push(){pushT=null;if(pushing){dirty=true;return}pushing=true;try{let n=0;do{dirty=false;const f=await pushOnce();if(f){clearTimeout(pushT);pushT=setTimeout(schedPush,5000);break}}while(dirty&&++n<5)}finally{pushing=false}}
 function schedPush(){if(!LOGGED)return;clearTimeout(pushT);pushT=setTimeout(push,300)}
 const _render=render;render=function(){_render.apply(this,arguments);schedPush()};
 setInterval(()=>{if(!LOGGED||pushing||pushT||S.drag||document.hidden)return;const a=document.activeElement;if(a&&((a.tagName==="INPUT"&&!/^(checkbox|radio|button|submit|range|file|color)$/.test(a.type))||a.tagName==="TEXTAREA")&&a.id!=="custQ"&&a.id!=="ciQ")return;load().catch(()=>{})},2000); // 2s refresh so holds/sales from other devices appear near-immediately; only pauses while typing in a text field
