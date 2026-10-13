@@ -365,7 +365,7 @@ async function applyRole(){try{const u=await(await sfetch(SB+"/auth/v1/user",{he
 /* ---- Staff presence panel: green = active session, red = not logged in ---- */
 var PRES=[];
 function escp(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-(function(){var lc=document.getElementById("log");if(lc){lc=lc.closest(".card");var pc=document.createElement("div");pc.className="card admOnly";pc.id="presCard";pc.style.marginTop="12px";pc.innerHTML="<h3>Who's logged in</h3><div id=\"presList\"></div><div class=\"small\" style=\"margin-top:6px;color:var(--mut)\">Green = logged in now, red = not. Every invite shows here, even before their first login. The X cancels access until you re-invite them.</div>";lc.parentNode.insertBefore(pc,lc.nextSibling)}})();
+(function(){var lc=document.getElementById("log");if(lc){lc=lc.closest(".card");var pc=document.createElement("div");pc.className="card admOnly";pc.id="presCard";pc.style.marginTop="12px";pc.innerHTML="<h3>User log</h3><div id=\"presList\"></div><div class=\"small\" style=\"margin-top:6px;color:var(--mut)\">Everyone who has access, invited or logged in. Green = online now, red = offline or not yet signed in. The X cancels access until you re-invite them.</div>";lc.parentNode.insertBefore(pc,lc.nextSibling)}})();
 var INVITES=[];
 async function invitesGet(){try{const r=await rq("settings?select=value&key=eq.invites");const j=await r.json();INVITES=(j[0]&&j[0].value&&JSON.parse(j[0].value))||[]}catch(e){}}
 async function invitesSet(){const r=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"invites",value:JSON.stringify(INVITES)})});if(!r.ok)throw new Error("could not save")}
@@ -389,7 +389,7 @@ async function presTick(){if(!LOGGED){renderPres();return}var id=(window.ACTEM||
  if(INVITES.find(function(v){return v.email===id&&v.revoked})){showLogin("Your access was cancelled. Ask Debbie to send you a new invite.");return}
  renderPres()}
 setInterval(presTick,20000);
-const _r2=render;render=function(){var a=document.activeElement;if(a&&(a.tagName==="SELECT"||a.tagName==="BUTTON"))a.blur();var sx=window.scrollX,sy=window.scrollY;_r2.apply(this,arguments);renderPres();window.scrollTo(sx,sy)};
+const _r2=render;render=function(){var a=document.activeElement;if(a&&(a.tagName==="SELECT"||a.tagName==="BUTTON"))a.blur();var sx=window.scrollX,sy=window.scrollY;_r2.apply(this,arguments);renderPres();if(window.scrollX!==sx||window.scrollY!==sy)window.scrollTo(sx,sy)};
 /* ---- Undo: reverse the most recent seating change (admin view) ---- */
 var UNDO=[];
 function snapState(){return JSON.stringify(S.shows.map(function(sh){return{seats:sh.seats,closed:Array.from(sh.closed)}}))}
@@ -451,7 +451,7 @@ document.getElementById("lgGo").onclick=doLogin;document.getElementById("lgPw").
 
 (function(){const mc=document.getElementById("map").closest(".card"),lc=document.getElementById("log").closest(".card"),cust=document.getElementById("cust"),cc=cust.closest(".card"),w=cust.parentNode;
 mc.parentNode.appendChild(lc);lc.style.marginTop="12px";var pc0=document.getElementById("presCard");if(pc0)lc.parentNode.insertBefore(pc0,lc.nextSibling);
-function sync(){if(!cc.offsetParent||!mc.offsetHeight)return;if(window.innerWidth<=900){w.style.maxHeight="360px";return}w.style.maxHeight="0px";const others=cc.offsetHeight;w.style.maxHeight=Math.max(120,mc.offsetHeight-others)+"px"}
+function sync(){if(!cc.offsetParent||!mc.offsetHeight)return;if(window.innerWidth<=900){if(w.style.maxHeight!=="360px")w.style.maxHeight="360px";return}var st=w.scrollTop;var nh=Math.max(120,mc.offsetHeight-(cc.offsetHeight-w.offsetHeight))+"px";if(w.style.maxHeight!==nh){w.style.maxHeight=nh;w.scrollTop=st}}
 if(window.ResizeObserver){new ResizeObserver(sync).observe(mc)}window.addEventListener("resize",sync);setInterval(sync,1500);sync()})();
 
 (function(){const vP=document.createElement("button");vP.id="vPos";vP.textContent="POS View";const wrap=document.createElement("span");wrap.id="viewSw";wrap.style.cssText="display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:8px;vertical-align:middle";document.getElementById("show").insertAdjacentElement("afterend",wrap);[vAdmin,vP,vGuest].forEach(b=>{b.style.cssText="padding:8px 12px;font-size:16px;border:2px solid #222;border-radius:8px";wrap.appendChild(b)});vAdmin.textContent="Debbie's View";vGuest.textContent="Guest View";
