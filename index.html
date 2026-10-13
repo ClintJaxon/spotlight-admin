@@ -148,7 +148,7 @@ function toggleClosed(t){if(DOOR)return;const c=S.shows[S.show].closed;const sol
 // ---- seat clicks
 function seatClick(id,fromModal){if(S.dragMoved){S.dragMoved=false;return}
  if(!fromModal&&S.view==="admin"&&!DOOR){S.sel={show:S.show,seat:id};S.ask=null;render();return}
- if(!fromModal){const o=seatState(S.show,id);if(S.view==="admin"&&(o.st==="sold"||o.st==="cash"||(o.st==="held"&&o.by==="other")))S.sel={show:S.show,seat:id};openTable(id.split("-")[0]);if(o.st==="avail"||(o.st==="held"&&o.by==="me"))seatClick(id,true);return}
+ if(!fromModal){const o=seatState(S.show,id);if(DOOR&&(o.st==="avail"||(o.st==="held"&&o.by==="me"))){seatClick(id,true);return}if(S.view==="admin"&&(o.st==="sold"||o.st==="cash"||(o.st==="held"&&o.by==="other")))S.sel={show:S.show,seat:id};openTable(id.split("-")[0]);if(o.st==="avail"||(o.st==="held"&&o.by==="me"))seatClick(id,true);return}
  const si=S.show,sh=S.shows[si],T=id.split("-")[0];
  if(sh.closed.has(T)){toast("That table isn't set up for this show.");return}
  const s=seatState(si,id);
