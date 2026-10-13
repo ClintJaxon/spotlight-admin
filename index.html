@@ -451,6 +451,20 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
  const iv=document.getElementById("inviteCard");if(iv)iv.insertAdjacentElement("afterend",c);
  document.getElementById("compChg").onclick=function(){compShow("change")};
  document.getElementById("compFgt").onclick=function(){compShow("forgot")}})();
+/* Practice reset card (Debbie): clears the PRACTICE seating store only, so she can practice selling from a clean floor. Hardcoded to seat_assignments + REAL guard - can never reach real event data (door_seats). */
+(function(){const c=document.createElement("div");c.className="card admOnly";c.id="resetCard";c.style.cssText="margin-top:12px;display:none";
+ c.innerHTML='<h3>Reset practice seating</h3><div class="small">Wipes every practice sale, hold, comp and check-in on every show, so you can practice selling again from a clean floor. Tables, shows, invites and the comp PIN all stay. This only ever clears the practice seating store - it cannot touch real event data.</div><div style="margin-top:8px"><button id="resetGo">Reset practice seating</button></div>';
+ const cc=document.getElementById("compCard")||document.getElementById("inviteCard");if(cc)cc.insertAdjacentElement("afterend",c);
+ document.getElementById("resetGo").onclick=async function(){if(REAL){toast("Practice reset is not available on live event data.");return}
+  if(!window.confirm("Reset ALL practice seating?\n\nEvery practice sale, hold, comp and check-in on every show will be cleared. Tables and shows stay."))return;
+  if(!window.confirm("Really reset all practice seating? This cannot be undone."))return;
+  const b=this;lbl=b.textContent;b.disabled=true;b.textContent="Resetting...";
+  try{const r=await rq("seat_assignments?show_id=not.is.null",{method:"DELETE",headers:{Prefer:"return=representation"}});if(!r.ok)throw new Error("delete failed ("+r.status+")");
+   const gone=(await r.json().catch(()=>[]))||[];
+   try{await rq("change_log",{method:"POST",body:JSON.stringify([{actor:window.ACTOR||"",action:"PRACTICE RESET: cleared all practice seating ("+gone.length+" seats) so practice can start over",show_id:null}])})}catch(e2){}
+   S.cart=[];S.sel=null;await load(true);
+   toast("Practice seating cleared - "+gone.length+" seats wiped. Every seat is open again!")}catch(e){toast("Reset failed: "+(e.message||e))}
+  b.disabled=false;b.textContent=lbl}})();
 setInterval(function(){if(LOGGED&&!DOOR)compHashGet()},60000);
 document.getElementById("ivGo").onclick=async()=>{const m=document.getElementById("ivMsg"),em=document.getElementById("ivEm").value.trim();if(!em){m.textContent="Type their email first.";return}m.textContent="Sending...";try{const r=await sfetch(SB+"/functions/v1/invite-user",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+TOK,"Content-Type":"application/json"},body:JSON.stringify({email:em,name:document.getElementById("ivNm").value.trim(),role:document.getElementById("ivRole").value})});const j=await r.json();if(!r.ok)throw new Error(j.error||"Could not send");try{await invitesGet();const em2=em.toLowerCase(),nm=document.getElementById("ivNm").value.trim(),ro=document.getElementById("ivRole").value;const ex=INVITES.find(function(v){return v.email===em2});if(ex){ex.revoked=false;if(nm)ex.name=nm;ex.role=ro}else INVITES.push({email:em2,name:nm,role:ro,invited_at:new Date().toISOString(),revoked:false});await invitesSet()}catch(_){}
  m.textContent="Invitation sent to "+em+".";document.getElementById("ivEm").value="";document.getElementById("ivNm").value=""}catch(e){m.textContent="Could not send: "+e.message}};
