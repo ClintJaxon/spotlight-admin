@@ -581,12 +581,20 @@ function openBub(p){cur=p;const box=document.getElementById("ciBox"),xs=seatsOfP
 
  +'<button class="go'+(p.ci?" re":"")+'" id="ciGo">'+(p.ci?"REPRINT TIX":"CHECK IN + PRINT TIX")+'</button><div class="sm"><button id="ciX">Close</button>'+(p.ci?'<button id="ciUn">Undo check-in</button>':"")+(p.cash&&!p.ci?'<button id="ciComp">Comp</button>':"")+'</div>';
  const go_=document.getElementById("ciGo"),cb=document.getElementById("cashBox");
- const locked=()=>p.cash&&!p.ci;
- const paint=()=>{go_.classList.toggle("lock",locked())};paint();
- if(cb&&p.cash)cb.onclick=()=>{cashIn(p);openBub(p)};
+ const locked=()=>{if(p.ci)return false;return p.ids.some(function(id){const c=document.querySelector('.ciSeatC[value="'+id+'"]');const x=S.shows[S.show].seats[id];return x&&x.st==="cash"&&(!c||c.checked)})};
+ const paint=()=>{go_.classList.toggle("lock",locked());if(cb&&p.cash){const sel2=p.ids.filter(function(id){const c=document.querySelector('.ciSeatC[value="'+id+'"]');return !c||c.checked});const amt2=sel2.reduce((a2,id)=>{const x=S.shows[S.show].seats[id];return a2+(x&&x.st==="cash"?owed(x):0)},0);const bb=cb.querySelector("b");if(bb)bb.textContent=amt2>0?"NO CASH RECEIVED - COLLECT $"+amt2:"No cash owed on the selected seats"}};paint();
+ box.querySelectorAll(".ciSeatC").forEach(function(c){c.addEventListener("change",paint)});
+ if(cb&&p.cash)cb.onclick=()=>cashIn(p);
  go_.onclick=()=>{if(locked()){cb.classList.remove("pulse");void cb.offsetWidth;cb.classList.add("pulse");toast("Collect the cash first");return}go(p)};
  const cmpB=document.getElementById("ciComp");if(cmpB)cmpB.onclick=()=>compShow("comp",p); document.getElementById("ciX").onclick=closeBub;const u=document.getElementById("ciUn");if(u)u.onclick=()=>undo(p);bub.classList.add("open")}
-function cashIn(p){const sh=S.shows[S.show],now=new Date().toISOString(),amt=p.ids.reduce((a,id)=>{const x=sh.seats[id];return a+(x&&x.st==="cash"?owed(x):0)},0);p.ids.forEach(id=>{const x=sh.seats[id];if(x&&x.st==="cash"){x.st="sold";x.rcv={at:now,by:window.ACTOR||""}}});p.cash=false;log("Order "+(p.order||"-")+": cash received at the door for "+p.name+" ("+p.ids.length+" seats, $"+amt+")");render()}
+function cashIn(p){const sh=S.shows[S.show],now=new Date().toISOString();
+ const sel=p.ids.filter(function(id){const c=document.querySelector('.ciSeatC[value="'+id+'"]');return !c||c.checked});
+ const amt=sel.reduce((a,id)=>{const x=sh.seats[id];return a+(x&&x.st==="cash"?owed(x):0)},0);
+ sel.forEach(id=>{const x=sh.seats[id];if(x&&x.st==="cash"){x.st="sold";x.rcv={at:now,by:window.ACTOR||""}}});
+ log("Order "+(p.order||"-")+": cash received at the door for "+p.name+" ("+sel.length+" of "+p.ids.length+" seats, $"+amt+")");
+ render();
+ const key=p.order||("n:"+p.name),p2=parties().find(q=>(q.order||("n:"+q.name))===key);
+ if(p2)openBub(p2)}
 function closeBub(){bub.classList.remove("open");cur=null}
 bub.addEventListener("click",e=>{if(e.target===bub)closeBub()});
 var NOWIRE=false;async function mark(p,on){const sh=S.shows[S.show],now=new Date().toISOString();p.ids.forEach(id=>{const x=sh.seats[id];if(!x)return;if(on){x.ci=now;x.ciby=window.ACTOR||""}else{delete x.ci;delete x.ciby}});
