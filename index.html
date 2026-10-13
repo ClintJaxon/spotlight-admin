@@ -5,7 +5,7 @@
 *{box-sizing:border-box}body{margin:0;font:18px/1.35 system-ui,Arial,sans-serif;background:var(--cream);color:var(--ink)}
 header{background:#1d1a16;color:var(--cream);padding:10px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 header b{font-size:20px}.badge{background:#c0392b;color:#fff;padding:2px 8px;border-radius:6px;font-size:14px}
-select{max-width:100%}button,select,input{font:inherit;padding:8px 12px;border-radius:8px;border:2px solid #1d1a16;background:#fff}
+select{max-width:100%}#show{max-width:min(460px,58%)}button,select,input{font:inherit;padding:8px 12px;border-radius:8px;border:2px solid #1d1a16;background:#fff}
 button{cursor:pointer;background:#fff}button.pri{background:#1d1a16;color:#fff}button.on{background:#2f7bff;color:#fff;border-color:#2f7bff}
 button.warn{background:#c0392b;color:#fff;border-color:#c0392b}
 main>section,aside{min-width:0}main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;padding:12px}
@@ -267,30 +267,55 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
   mk("Never mind",()=>{S.ask=null;render()});return}
  const pty=window.__ci&&window.__ci.parties&&S.sel.show===S.show?window.__ci.parties().find(pp=>pp.order&&pp.order===s.order):null;
  if(pty)mk(pty.ci?"Undo check-in":"Check in party + print tix",async()=>{if(pty.ci){await window.__ci.undo(pty);render()}else window.__ci.openBub(pty);window.__ci.renderCI()},"pri");
- if(s.st==="cash"){if(!DOOR){const cashBtn=mk("Cash received - mark sold",()=>{
+ if(s.st==="cash"){if(!DOOR){const cashBtn=mk("Tender - mark sold",()=>{
    const old=b.querySelector("#cashPick");if(old)old.remove();
    const o=s.order,sh=S.shows[S.sel.show];
    const ids=Object.keys(sh.seats).filter(k=>sh.seats[k].order===o&&sh.seats[k].st==="cash");
    const pk=document.createElement("div");pk.id="cashPick";pk.style.cssText="margin-top:8px;padding:10px;border:3px solid #2c8a1c;border-radius:10px;background:#eefae4;width:100%";
-   pk.innerHTML='<div style="font-weight:bold;margin-bottom:6px">Which seats is this cash for?</div>'+ids.map(id=>'<label style="display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0;font-size:20px;white-space:nowrap"><input type="checkbox" class="cashPickC" value="'+id+'" checked style="width:24px;height:24px;margin:0;flex:none">Seat '+id.split("-").pop()+'</label>').join("");
-   const cf=document.createElement("button");cf.className="pri";cf.style.marginTop="8px";
-   const paint2=()=>{const sel=[].slice.call(pk.querySelectorAll(".cashPickC")).filter(c=>c.checked);cf.textContent=sel.length?("Mark "+sel.length+" seat"+(sel.length>1?"s":"")+" sold - $"+sel.reduce((a2,c)=>a2+owed(sh.seats[c.value]),0)):"Pick at least one seat";cf.disabled=!sel.length};
-   pk.querySelectorAll(".cashPickC").forEach(c=>c.addEventListener("change",paint2));paint2();
-   cf.onclick=()=>{const sel=[].slice.call(pk.querySelectorAll(".cashPickC")).filter(c=>c.checked).map(c=>c.value);if(!sel.length)return;markUndo();sel.forEach(id=>{sh.seats[id].st="sold"});log("Order "+o+": cash received for "+sel.length+" of "+ids.length+" seats - "+sel.join(", ")+" marked sold");S.sel=null;render()};
-   pk.appendChild(cf);if(cashBtn)cashBtn.insertAdjacentElement("afterend",pk);else b.appendChild(pk);
+   pk.innerHTML='<div style="font-weight:bold;margin-bottom:6px">Tender: which seats is this payment for?</div>'+ids.map(id=>'<label style="display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0;font-size:20px;white-space:nowrap"><input type="checkbox" class="cashPickC" value="'+id+'" checked style="width:24px;height:24px;margin:0;flex:none">Seat '+id.split("-").pop()+'</label>').join("");
+   const brow=document.createElement("div");brow.style.cssText="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap";
+   const cf=document.createElement("button");cf.className="pri";
+   const cc=document.createElement("button");cc.className="pri";cc.style.background="#2f7bff";
+   const selIds=()=>[].slice.call(pk.querySelectorAll(".cashPickC")).filter(c=>c.checked).map(c=>c.value);
+   const paint2=()=>{const sel=selIds(),a2=sel.reduce((t,id)=>t+owed(sh.seats[id]),0);cf.textContent=sel.length?("Mark "+sel.length+" seat"+(sel.length>1?"s":"")+" sold - $"+a2+" cash"):"Pick at least one seat";cc.textContent="Charge $"+a2+" by card";cf.disabled=cc.disabled=!sel.length};
+   pk.querySelectorAll(".cashPickC").forEach(c=>c.addEventListener("change",paint2));
+   cf.onclick=()=>{const sel=selIds();if(!sel.length)return;markUndo();sel.forEach(id=>{sh.seats[id].st="sold"});log("Order "+o+": cash received for "+sel.length+" of "+ids.length+" seats - "+sel.join(", ")+" marked sold");S.sel=null;render()};
+   cc.onclick=()=>{const sel=selIds();if(!sel.length)return;
+    const a2=sel.reduce((t,id)=>t+owed(sh.seats[id]),0);
+    const old2=pk.querySelector("#tenderBox");if(old2)old2.remove();
+    const tb=document.createElement("div");tb.id="tenderBox";tb.style.cssText="margin-top:8px;padding:10px;border:3px dashed #c98a00;border-radius:10px;background:#fff6dd;width:100%";
+    tb.innerHTML='<div style="font-weight:bold;margin-bottom:6px">PRACTICE card - pretend payment, no money moves. Guest info is already on file - just take the card.</div><label>Card number<input id="tdN" inputmode="numeric" autocomplete="off" value="4111 1111 1111 1111" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label><div style="display:flex;gap:8px;margin-top:6px"><label style="flex:1">Expires<input id="tdE" autocomplete="off" value="12/30" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label><label style="flex:1">CVV<input id="tdC" autocomplete="off" value="111" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label><label style="flex:1">ZIP<input id="tdZ" autocomplete="off" value="94558" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label></div>';
+    const ch=document.createElement("button");ch.className="pri";ch.style.marginTop="8px";ch.textContent="Charge $"+a2+" (practice)";
+    ch.onclick=()=>{const num=(document.getElementById("tdN").value||"").replace(/\D/g,"");if(num.length<12){toast("Type the full card number.");return}markUndo();const now=new Date().toISOString();sel.forEach(id=>{const x=sh.seats[id];x.st="sold";x.tender="card";x.last4=num.slice(-4);x.rcv={at:now,by:window.ACTOR||""}});log("Order "+o+": card payment (practice) - $"+a2+" for "+sel.length+" of "+ids.length+" seats, card ...."+num.slice(-4));toast("Card approved (practice).");render()};
+    tb.appendChild(ch);pk.appendChild(tb);setTimeout(()=>{try{tb.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},50)};
+   brow.appendChild(cf);brow.appendChild(cc);pk.appendChild(brow);
+   paint2();
+   if(cashBtn)cashBtn.insertAdjacentElement("afterend",pk);else b.appendChild(pk);
    setTimeout(()=>{try{pk.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},50)},"pri")};
-  const cardBtn=mk("Pay by credit card ($"+amt+")",()=>{
-   const sh=S.shows[S.sel.show],o=s.order,g=s.guest||{};
-   const old=b.querySelector("#tenderBox");if(old)old.remove();
-   const tb=document.createElement("div");tb.id="tenderBox";tb.style.cssText="margin-top:8px;padding:10px;border:3px dashed #c98a00;border-radius:10px;background:#fff6dd;width:100%";
-   tb.innerHTML='<div style="font-weight:bold;margin-bottom:6px">PRACTICE card - pretend payment, no money moves. Guest info is already on file - just take the card.</div><label>Card number<input id="tdN" inputmode="numeric" autocomplete="off" value="4111 1111 1111 1111" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label><div style="display:flex;gap:8px;margin-top:6px"><label style="flex:1">Expires<input id="tdE" autocomplete="off" value="12/30" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label><label style="flex:1">CVV<input id="tdC" autocomplete="off" value="111" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label><label style="flex:1">ZIP<input id="tdZ" autocomplete="off" value="94558" style="width:100%;font-size:20px;padding:8px;box-sizing:border-box"></label></div>';
-   const ch=document.createElement("button");ch.className="pri";ch.style.marginTop="8px";ch.textContent="Charge $"+amt+" (practice)";
-   ch.onclick=()=>{const num=(document.getElementById("tdN").value||"").replace(/\D/g,"");if(num.length<12){toast("Type the full card number.");return}markUndo();const now=new Date().toISOString();for(const k in sh.seats)if(sh.seats[k].order===o&&sh.seats[k].st==="cash"){sh.seats[k].st="sold";sh.seats[k].tender="card";sh.seats[k].last4=num.slice(-4);sh.seats[k].rcv={at:now,by:window.ACTOR||""}}log("Order "+o+": card payment taken at the door (practice) - $"+amt+", card ...."+num.slice(-4));toast("Card approved (practice). Order "+o+" is paid.");render()};
-   tb.appendChild(ch);if(cardBtn)cardBtn.insertAdjacentElement("afterend",tb);else b.appendChild(tb);setTimeout(()=>{try{tb.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},50)},"pri");
-  mk("Cancel / refund whole order ($"+amt+")",()=>{S.ask={kind:"order",seat:S.sel.seat,show:S.sel.show};render()},"warn")}
- else mk("Refund whole order ($"+amt+")",()=>{S.ask={kind:"order",seat:S.sel.seat,show:S.sel.show};render()},"warn");
- mk("Refund just this seat ($"+owed(s)+")",()=>{S.ask={kind:"seat",seat:S.sel.seat,show:S.sel.show};render()})}
-function doRefund(si,ids,label,method){if(DOOR)return;markUndo();const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const wasCash=first&&first.st==="cash";
+ }
+ const rfBtn=mk("Cancel / refund",()=>{
+  const old=b.querySelector("#rfPick");if(old)old.remove();
+  const sh=S.shows[S.sel.show],o=s.order;
+  const ids=Object.keys(sh.seats).filter(k=>sh.seats[k].order===o);
+  const pk=document.createElement("div");pk.id="rfPick";pk.style.cssText="margin-top:8px;padding:10px;border:3px solid #c0392b;border-radius:10px;background:#fff3f0;width:100%";
+  pk.innerHTML='<div style="font-weight:bold;margin-bottom:6px">Cancel / refund: which seats? This frees the seats for resale.</div>'+ids.map(id=>'<label style="display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0;font-size:20px;white-space:nowrap"><input type="checkbox" class="rfPickC" value="'+id+'" checked style="width:24px;height:24px;margin:0;flex:none">Seat '+id.split("-").pop()+'</label>').join("");
+  const selIds=()=>[].slice.call(pk.querySelectorAll(".rfPickC")).filter(c=>c.checked).map(c=>c.value);
+  const allCash=()=>{const sel=selIds();return sel.length&&sel.every(id=>sh.seats[id]&&sh.seats[id].st==="cash")};
+  const brow=document.createElement("div");brow.style.cssText="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap";
+  const cf=document.createElement("button");cf.className="warn";
+  const cc=document.createElement("button");cc.className="warn";
+  const paint3=()=>{const sel=selIds(),a2=sel.reduce((t,id)=>t+owed(sh.seats[id]),0),ac=allCash();
+   cf.textContent=sel.length?(ac?("Cancel "+sel.length+" seat"+(sel.length>1?"s":"")+" - hand back $"+a2+" cash"):("Refund $"+a2+" to the card")):"Pick at least one seat";
+   cc.style.display=ac?"none":"";cc.textContent="Hand back $"+a2+" cash instead";
+   cf.disabled=cc.disabled=!sel.length};
+  pk.querySelectorAll(".rfPickC").forEach(c=>c.addEventListener("change",paint3));
+  cf.onclick=()=>{const sel=selIds();if(!sel.length)return;doRefund(S.sel.show,sel,"order "+o+" ("+sel.length+" of "+ids.length+" seats)",allCash()?"cash":"card")};
+  cc.onclick=()=>{const sel=selIds();if(!sel.length)return;doRefund(S.sel.show,sel,"order "+o+" ("+sel.length+" of "+ids.length+" seats)","cash")};
+  brow.appendChild(cf);brow.appendChild(cc);pk.appendChild(brow);
+  paint3();
+  if(rfBtn)rfBtn.insertAdjacentElement("afterend",pk);else b.appendChild(pk);
+  setTimeout(()=>{try{pk.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},50)},"warn")}
+function doRefund(si,ids,label,method){if(DOOR)return;markUndo();const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const wasCash=ids.every(id=>sh.seats[id]&&sh.seats[id].st==="cash");
  const amt=ids.reduce((a,id)=>a+owed(sh.seats[id]),0);ids.forEach(id=>{const x=sh.seats[id];touchC(x);if(x&&x.guest){const c=S.cust[ck(x.guest)],d=SHOWS[si][0];if(c&&c.shows[d]){c.shows[d]--;if(c.shows[d]<=0)delete c.shows[d]}}delete sh.seats[id]});
  const how=wasCash?("Cancelled cash "+label+" - cash handed back if taken"):(method==="cash"?("Refunded $"+amt+" in cash at the table - "+label):("Refunded $"+amt+" to card (demo) - "+label));
  log(how+(g?" ("+g.name+")":"")+" for "+SHOWS[si][0]+" - seats open again");
@@ -479,8 +504,8 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
  document.getElementById("compChg").onclick=function(){compShow("change")};
  document.getElementById("compFgt").onclick=function(){compShow("forgot")}})();
 /* Practice reset button (Debbie): sits beside Undo. Clears the PRACTICE seating store only, hardcoded to seat_assignments + REAL guard - can never reach real event data (door_seats). One confirm, same style as cancel-user. */
-(function(){const u=document.getElementById("show");if(!u)return;const b=document.createElement("button");b.id="resetGo";b.textContent="Reset practice";b.title="Wipe every practice sale, hold, comp and check-in on every show, so practice can start over. Practice data only - cannot touch real event data.";b.className="warn";u.insertAdjacentElement("afterend",b);
- const _svRst=setView;setView=function(){_svRst.apply(this,arguments);b.style.display=(REAL||S.view!=="admin")?"none":""};b.style.display=(REAL||S.view!=="admin")?"none":"";
+(function(){const u=document.getElementById("show");if(!u)return;const b=document.createElement("button");b.id="resetGo";b.textContent="Reset practice";b.title="Wipe every practice sale, hold, comp and check-in on every show, so practice can start over. Practice data only - cannot touch real event data.";b.className="warn admOnly";u.insertAdjacentElement("afterend",b);
+ const _svRst=setView;setView=function(){_svRst.apply(this,arguments);b.style.display=(REAL||DOOR||S.view!=="admin")?"none":""};b.style.display=(REAL||DOOR||S.view!=="admin")?"none":"";
  b.onclick=async function(){if(REAL){toast("Practice reset is not available on live event data.");return}
   if(!window.confirm("Reset ALL practice seating?\n\nEvery practice sale, hold, comp and check-in on every show will be cleared - tables and shows stay.\n\nTap OK to reset, or Cancel to keep everything."))return;
   b.disabled=true;const lbl=b.textContent;b.textContent="Resetting...";
