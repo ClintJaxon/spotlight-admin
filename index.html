@@ -267,7 +267,18 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
   mk("Never mind",()=>{S.ask=null;render()});return}
  const pty=window.__ci&&window.__ci.parties&&S.sel.show===S.show?window.__ci.parties().find(pp=>pp.order&&pp.order===s.order):null;
  if(pty)mk(pty.ci?"Undo check-in":"Check in party + print tix",async()=>{if(pty.ci){await window.__ci.undo(pty);render()}else window.__ci.openBub(pty);window.__ci.renderCI()},"pri");
- if(s.st==="cash"){mk("Cash received - mark sold",()=>{markUndo();const o=s.order;const sh=S.shows[S.sel.show];for(const k in sh.seats)if(sh.seats[k].order===o&&sh.seats[k].st==="cash")sh.seats[k].st="sold";log("Order "+o+": cash received, seats now sold");render()},"pri");
+ if(s.st==="cash"){if(!DOOR){const cashBtn=mk("Cash received - mark sold",()=>{
+   const old=b.querySelector("#cashPick");if(old)old.remove();
+   const o=s.order,sh=S.shows[S.sel.show];
+   const ids=Object.keys(sh.seats).filter(k=>sh.seats[k].order===o&&sh.seats[k].st==="cash");
+   const pk=document.createElement("div");pk.id="cashPick";pk.style.cssText="margin-top:8px;padding:10px;border:3px solid #2c8a1c;border-radius:10px;background:#eefae4;width:100%";
+   pk.innerHTML='<div style="font-weight:bold;margin-bottom:6px">Which seats is this cash for?</div>'+ids.map(id=>'<label style="display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0;font-size:20px;white-space:nowrap"><input type="checkbox" class="cashPickC" value="'+id+'" checked style="width:24px;height:24px;margin:0;flex:none">Seat '+id.split("-").pop()+'</label>').join("");
+   const cf=document.createElement("button");cf.className="pri";cf.style.marginTop="8px";
+   const paint2=()=>{const sel=[].slice.call(pk.querySelectorAll(".cashPickC")).filter(c=>c.checked);cf.textContent=sel.length?("Mark "+sel.length+" seat"+(sel.length>1?"s":"")+" sold - $"+sel.reduce((a2,c)=>a2+owed(sh.seats[c.value]),0)):"Pick at least one seat";cf.disabled=!sel.length};
+   pk.querySelectorAll(".cashPickC").forEach(c=>c.addEventListener("change",paint2));paint2();
+   cf.onclick=()=>{const sel=[].slice.call(pk.querySelectorAll(".cashPickC")).filter(c=>c.checked).map(c=>c.value);if(!sel.length)return;markUndo();sel.forEach(id=>{sh.seats[id].st="sold"});log("Order "+o+": cash received for "+sel.length+" of "+ids.length+" seats - "+sel.join(", ")+" marked sold");S.sel=null;render()};
+   pk.appendChild(cf);if(cashBtn)cashBtn.insertAdjacentElement("afterend",pk);else b.appendChild(pk);
+   setTimeout(()=>{try{pk.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},50)},"pri")};
   const cardBtn=mk("Pay by credit card ($"+amt+")",()=>{
    const sh=S.shows[S.sel.show],o=s.order,g=s.guest||{};
    const old=b.querySelector("#tenderBox");if(old)old.remove();
