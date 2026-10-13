@@ -520,9 +520,9 @@ document.getElementById("compGo").onclick=async function(){const msg=document.ge
  const u=document.getElementById("undoB");if(!u)return;
  const b=document.createElement("button");b.id="posMoveT";
  S.posMove=true;
- function paint(){b.textContent="POS seat moves: "+(S.posMove?"on":"off");b.className=S.posMove?"on":""}
+ function paint(){b.textContent="POS moves: "+(S.posMove?"on":"off");b.className=S.posMove?"on":""}
  b.title="Let door staff move seats by dragging in the POS table view. Turn off to lock seat moves to Debbie's view.";
- b.onclick=async function(){S.posMove=!S.posMove;paint();try{await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"pos_move",value:JSON.stringify(S.posMove)})});log("POS seat moves "+(S.posMove?"enabled for door staff":"locked to Debbie's view"))}catch(e){toast("Could not save that setting.")}};
+ b.onclick=async function(){S.posMove=!S.posMove;paint();try{await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"pos_move",value:JSON.stringify(S.posMove)})});log("POS moves "+(S.posMove?"enabled for door staff":"locked to Debbie's view"))}catch(e){toast("Could not save that setting.")}};
  u.insertAdjacentElement("beforebegin",b);
  (async function(){try{const r=await rq("settings?select=value&key=eq.pos_move");const j=await r.json();if(j[0]&&j[0].value!=null)S.posMove=JSON.parse(j[0].value)}catch(e){}paint()})();
  paint();
