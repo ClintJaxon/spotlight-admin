@@ -207,7 +207,7 @@ function renderTimer(){const mine=S.cart.map(c=>S.shows[c.show].seats[c.seat]).f
  if(!mine.length){el.textContent="";return}const m=Math.min(...mine.map(s=>s.exp))-Date.now();const s=Math.max(0,Math.floor(m/1000));el.textContent=`- seats held ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`}
 function renderCart(){const c=document.getElementById("cart");const by={};S.cart.forEach(i=>(by[i.show]=by[i.show]||[]).push(i.seat));
  const keys=Object.keys(by);c.innerHTML=keys.length?keys.map(k=>`<b>${fmt(SHOWS[k][0])} - ${SHOWS[k][1]}</b><br>${by[k].sort().join(", ")} (${by[k].length} x $${PRICE})`).join("<hr>"):"Empty. Tap bright seats.";
- document.getElementById("form").style.display="block";
+ {const _s=(S.view==="admin"&&M.open&&S.sel&&S.cart.length===0&&S.sel.seat.split("-")[0]===M.t)?seatState(S.sel.show,S.sel.seat):null;document.getElementById("form").style.display=(_s&&(_s.guest||_s.st==="held"))?"none":"block"}
  document.getElementById("goCheckout").style.display="none";
  document.getElementById("tenderRow").style.display=S.view==="admin"?"block":"none";document.getElementById("cardRow").style.display=(S.view==="admin"&&document.getElementById("tender").value==="card")?"block":"none";
  ["fw","fa","fh"].forEach(i=>{document.getElementById(i).parentNode.style.display=S.view==="admin"?"none":""});
