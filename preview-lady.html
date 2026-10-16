@@ -791,7 +791,7 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
   window.__sessClear=function(){try{localStorage.removeItem(LS)}catch(e){}};
   var _auth=auth;auth=async function(body,grant){const r=await _auth.apply(this,arguments);window.__sessSave();return r};
   (async function(){
-    try{var s=JSON.parse(localStorage.getItem(LS)||"null");if(!s||!s.r)return;
+    try{var s=JSON.parse(localStorage.getItem(LS)||"null");if(!s||!s.r||/preview-lady/.test(location.pathname))return;
       TOK=s.t;RT=s.r;
       try{await auth({refresh_token:RT},"refresh_token")}catch(e){window.__sessClear();return}
       try{const u=await(await sfetch(SB+"/auth/v1/user",{headers:{apikey:KEY,Authorization:"Bearer "+TOK}})).json();const m=u.user_metadata||{};window.ACTOR=m.name||(u.email||"").split("@")[0]}catch(_){}
