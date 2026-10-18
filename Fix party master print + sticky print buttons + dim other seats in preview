@@ -595,6 +595,7 @@ body.door #rptOpen,body.door #rptBub{display:none!important}
 #tkList .mg{position:absolute;left:.04in;right:.04in;top:0;height:.9033in;border:1px dotted #f0a;pointer-events:none}#tkList .tkSc>.tkt{position:absolute;left:.04in;top:.02in;margin:0}
 #tkBox .row{display:flex;gap:10px;margin-top:14px}#tkBox .row button{flex:1;font-size:22px;font-weight:bold;padding:18px;border:0;border-radius:14px;color:#fff;background:#1f8a3a}
 #tkBox .row button.sec{background:#fff;color:#222;border:2px solid #777;font-size:18px;flex:.5}
+#tkFoot{position:sticky;bottom:0;background:#fff8e8;margin:16px -22px -22px;padding:2px 22px 18px;border-top:2px solid #e3d8ba;border-radius:0 0 20px 20px;z-index:5}
 #tkBox .adj{display:flex;gap:8px;justify-content:center;margin-top:10px;font-size:14px;align-items:center}#tkBox .adj button{font-size:18px;padding:6px 14px;border:2px solid #777;border-radius:8px;background:#fff}
 @page{size:29mm 62mm;margin:0}
 @media print{body.printing>*:not(#ticket){display:none!important}body.printing #ticket{display:block!important;width:auto!important;margin:0!important;padding:0!important}body.printing #ticket>.tkw{width:2.32in;height:.9033in;margin:0;}overflow:hidden;position:relative;break-inside:avoid;page-break-inside:avoid;page-break-after:always;break-after:page}body.printing #ticket>.tkw:last-child{page-break-after:auto;break-after:auto}body.printing #ticket>.tkw>.tkt{page-break-after:auto;break-after:auto}body.printing{margin:0!important;padding:0!important;background:#fff!important}}
@@ -709,40 +710,41 @@ async function printerSendMaster(p){await piStatus();if(PI_STATE==="none"||PI_ST
 function masterCanvas(p){
  const sh=SHOWS[S.show],show=String(sh[1]).toUpperCase(),d=sh[0].split("-"),dt=d[1]+"/"+d[2]+"/"+d[0].slice(2),nm=String(p.name||"").toUpperCase();
  const FCB='"Arial Narrow","Helvetica Neue",Arial,sans-serif',FSR='Georgia,"Times New Roman",serif',mc=masterCanvas._mc||(masterCanvas._mc=document.createElement("canvas").getContext("2d"));
- function fit(t,base,maxin,w,fam,mn){let s=base;mc.font=w+" "+s+"pt "+fam;while(mc.measureText(t).width>maxin*96&&s>mn){s-=.5;mc.font=w+" "+s+"pt "+fam}return s}
+ function fit(t,base,maxin,w,fam,mn){let s=base;while(s>mn){mc.font=w+" "+s+"pt "+fam;if(mc.measureText(t).width<=maxin*96)break;s-=.5}return s}
  function fitPair(a,b,base,maxin,w,fam,mn,gap){let s=base;while(s>mn){mc.font=w+" "+s+"pt "+fam;if(mc.measureText(a).width+mc.measureText(b).width<=(maxin-gap)*96)break;s-=.5}return s}
+ function btRow(sB,phone,site,code){ mc.font="bold "+sB+"pt "+FCB;
+  const pw=mc.measureText(phone).width/96, cw=mc.measureText(code).width/96, sw=mc.measureText(site).width/96;
+  const sl=(pw+(2.12-cw))/2-sw/2;
+  const bs='top:0;height:100%;display:flex;align-items:center;position:absolute;';
+  return '<div class="tbt" style="font-size:'+sB+'pt"><span style="'+bs+'left:0">'+phone+'</span><span style="'+bs+'left:'+(sl*96).toFixed(0)+'px">'+site+'</span><span style="'+bs+'right:0">'+code+'</span></div>'; }
  const tabs=Object.keys(p.tables).map(function(k){return [k,p.tables[k].slice().sort(function(a,b){return a-b})]});
  let nums,tbl;
  if(tabs.length===1){nums=tabs[0][1].join(", ");tbl=String(NAME[tabs[0][0]]||tabs[0][0]).toUpperCase()}
  else{nums=tabs.map(function(e){return e[0]+": "+e[1].join(", ")}).join("  \u00B7  ");tbl=""}
- const sS=fit(show,15*TS,2.14,"900",FSR,6),sC=fit(nm,13.2*TS,1.9,"400",FCB,5.2),sP=(5.4*TS).toFixed(1),sB=(6.8*TS).toFixed(1);
- const sN=tbl?fitPair(nums,tbl,13.2*TS,2.14,"900",FCB,5.2,.09):fit(nums,13.2*TS,2.14,"900",FCB,5.2);
  const code=tabs.map(function(e){return e[0]}).join("+");
- mc.font="bold "+sB+"pt "+FCB;const pw=mc.measureText("928-318-3487").width/96,cw=mc.measureText(code).width/96,sw=mc.measureText("spotlightdinner.com").width/96;
- const sl=(pw+(2.12-cw))/2-sw/2;
- const bs='top:0;height:100%;display:flex;align-items:center;position:absolute;';
- const html='<div class="tkt"><div class="tb1"></div><div class="tb2"></div>'
- +'<div class="tsp" style="top:.0633in;font-size:'+sP+'pt">SPOTLIGHT DINNER THEATER</div>'
- +'<div class="tdt" style="top:.0633in;font-size:'+sP+'pt">'+dt+'</div>'
- +'<div class="tsh" style="top:.1582in;height:.1560in;font-size:'+sS+'pt"><span>'+show+'</span></div>'
- +'<div class="tcu" style="top:.3425in;font-size:'+sC+'pt">'+nm+'</div>'
- +'<div class="tsc" style="top:.5145in;font-size:'+sP+'pt">SEATS</div>'
- +'<div class="tsn" style="top:.5922in;font-size:'+sN+'pt">'+nums+'</div>'
- +(tbl?'<div class="ttb" style="top:.5799in;font-size:'+sN+'pt">'+tbl+'</div>':'')
- +'<div class="tdv"></div>'
- +'<div class="tbt" style="font-size:'+sB+'pt"><span style="'+bs+'left:0">928-318-3487</span><span style="'+bs+'left:'+(sl*96).toFixed(0)+'px">spotlightdinner.com</span><span style="'+bs+'right:0">'+code+'</span></div></div>';
- const host=document.createElement('div');host.style.cssText='position:fixed;left:-9999px;top:0';host.innerHTML=html;document.body.appendChild(host);
- const t=host.firstChild,cv=document.createElement('canvas');cv.width=696;cv.height=271;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,696,271);
- const k=696/(2.32*96),r0=t.getBoundingClientRect();
- t.querySelectorAll('.tsp,.tdt,.tsh,.tcu,.ttb,.tbt span,.tsc,.tsn').forEach(function(el){const cs=getComputedStyle(el),r=el.getBoundingClientRect();x.font=cs.fontWeight+' '+(parseFloat(cs.fontSize)*k)+'px '+cs.fontFamily;x.fillStyle='#000';x.textBaseline='middle';x.fillText(el.textContent,(r.left-r0.left)*k,(r.top-r0.top+r.height/2)*k)});
- x.strokeStyle='#000';x.lineWidth=2;x.strokeRect(1,1,694,269);
- host.remove();return cv}
+ const sP=+(5.4*TS).toFixed(1),sB=+(6.8*TS).toFixed(1);
+ const sS=fit(show,15*TS,2.14,"900",FSR,6),sC=fit(nm,13.2*TS,1.9,"400",FCB,5.2),sN=tbl?fitPair(nums,tbl,13.2*TS,2.14,"900",FCB,5.2,.09):fit(nums,13.2*TS,2.14,"900",FCB,5.2);
+ const host=document.createElement("div");host.style.cssText="position:fixed;left:-5000px;top:0;width:2.32in";
+ host.innerHTML='<div class="tkt"><div class="b1"></div><div class="b2"></div><div class="tsp" style="font-size:'+sP+'pt">SPOTLIGHT PRESENTS</div><div class="tdt" style="font-size:'+sP+'pt">'+dt+'</div><div class="tsh" style="font-size:'+sS.toFixed(1)+'pt">'+show+'</div><div class="tcu" style="font-size:'+sC.toFixed(1)+'pt">'+nm+'</div><div class="tsc" style="position:absolute;left:.10in;top:.5145in;height:.0657in;font-size:'+sP+'pt;font-weight:bold;letter-spacing:.06em;font-family:'+FCB+';display:flex;align-items:center">SEATS</div><div class="tsn" style="position:absolute;left:.10in;top:.5922in;height:.1232in;font-size:'+sN.toFixed(1)+'pt;font-weight:900;white-space:nowrap;display:flex;align-items:center;font-family:'+FCB+'">'+nums+'</div>'+(tbl?'<div class="ttb" style="font-size:'+sN.toFixed(1)+'pt;top:.5799in">'+tbl+'</div>':'')+'<div class="tdv"></div>'+btRow(sB,"928-318-3487","spotlightdinner.com",code)+'</div>';
+ document.body.appendChild(host);
+ try{
+  const t=host.querySelector(".tkt");
+  const DPI=300,sc=DPI/96,R=t.getBoundingClientRect(),W=Math.round(2.32*DPI),H=Math.round(.9033*DPI);
+  const cv=document.createElement("canvas");cv.width=W;cv.height=H;const c=cv.getContext("2d");
+  c.fillStyle="#fff";c.fillRect(0,0,W,H);c.strokeStyle="#000";c.fillStyle="#000";
+  [".b1",".b2"].forEach(function(sel){const e=t.querySelector(sel),r=e.getBoundingClientRect(),w=parseFloat(getComputedStyle(e).borderTopWidth)*sc;c.lineWidth=w;c.strokeRect((r.left-R.left)*sc+w/2,(r.top-R.top)*sc+w/2,r.width*sc-w,r.height*sc-w)});
+  const dv=t.querySelector(".tdv"),dr=dv.getBoundingClientRect(),dw=Math.max(1,parseFloat(getComputedStyle(dv).borderTopWidth)*sc);c.fillRect((dr.left-R.left)*sc,(dr.top-R.top)*sc,dr.width*sc,dw);
+  t.querySelectorAll(".tsp,.tdt,.tsh,.tcu,.ttb,.tbt span,.tsc,.tsn").forEach(function(e){const cs=getComputedStyle(e),rg=document.createRange();rg.selectNodeContents(e);const r=rg.getBoundingClientRect();c.font=cs.fontWeight+" "+(parseFloat(cs.fontSize)*sc)+"px "+cs.fontFamily;c.textBaseline="middle";c.textAlign="left";c.fillText(e.textContent,(r.left-R.left)*sc,((r.top+r.bottom)/2-R.top)*sc)});
+  return cv;
+ } finally { host.remove(); }
+}
 function doPrint(p){ticket(p);document.body.classList.add("printing");window.print()}
 function showTix(p,seatId){ticket(p);const b=document.getElementById('tkBox'),n=p.ids.length;
- b.innerHTML='<h3>Ticket preview - exactly what the Brother prints</h3>'+(NOWIRE?'<div class="sub" style="color:#a33;font-weight:bold">Check-in was NOT recorded: door check-in is not switched on yet. This is a preview/print only.</div>':'')+'<div class="sub">DK-1209 label, 2.4 x 1.1 in, black only. One ticket per seat'+(n>1?' - this party has '+n+' seats':'')+'. Dashed line = label edge. Pink dotted = printable area.</div><div id="tkList"></div><div class="adj">Text size <button id="tkM">-</button><b>'+Math.round(TS*100)+'%</b><button id="tkP">+</button></div><div class="row">'+(seatId?'<button id="tkGo1">PRINT TICKET</button>':'')+'<button id="tkGo2">PRINT GROUP TICKETS</button></div><div class="row"><button id="tkGo3">PRINT PARTY TICKET</button><button class="sec" id="tkX">Done</button></div>';
+ b.innerHTML='<h3>Ticket preview - exactly what the Brother prints</h3>'+(NOWIRE?'<div class="sub" style="color:#a33;font-weight:bold">Check-in was NOT recorded: door check-in is not switched on yet. This is a preview/print only.</div>':'')+'<div class="sub">DK-1209 label, 2.4 x 1.1 in, black only. One ticket per seat'+(n>1?' - this party has '+n+' seats':'')+'. Dashed line = label edge. Pink dotted = printable area.</div><div id="tkList"></div><div id="tkFoot"><div class="adj">Text size <button id="tkM">-</button><b>'+Math.round(TS*100)+'%</b><button id="tkP">+</button></div><div class="row">'+(seatId?'<button id="tkGo1">PRINT TICKET</button>':'')+'<button id="tkGo2">PRINT GROUP TICKETS</button></div><div class="row"><button id="tkGo3">PRINT PARTY TICKET</button><button class="sec" id="tkX">Done</button></div></div>';
  document.body.classList.add('printing');pv.classList.add('open');const L=document.getElementById('tkList');
  L.innerHTML='';
  Array.from(tk.children).forEach(t=>{const wr=document.createElement('div');wr.className='tkWrap';const sc=document.createElement('div');sc.className='tkSc';sc.innerHTML=t.innerHTML+'<div class="mg"></div>';wr.appendChild(sc);L.appendChild(wr);const k=(wr.clientWidth-24)/(2.4*96);sc.style.transform='scale('+k+')';wr.style.height=(1.1*96*k+24)+'px'});
+ if(seatId){const _ix=p.ids.indexOf(seatId);Array.from(L.children).forEach(function(w,k){if(k!==_ix){w.style.opacity='.35';w.style.filter='grayscale(.5)'}})}
  if(seatId){const _pr=seatId.split('-'),_t=_pr.slice(0,-1).join('-'),_tb={};_tb[_t]=[+_pr[_pr.length-1]];document.getElementById('tkGo1').onclick=async()=>{if(await printerSend(Object.assign({},p,{ids:[seatId],tables:_tb})))document.getElementById('tkX').click()}}document.getElementById('tkGo2').onclick=async()=>{if(await printerSend(p))document.getElementById('tkX').click()};document.getElementById('tkGo3').onclick=async()=>{if(await printerSendMaster(p))document.getElementById('tkX').click()};document.getElementById('tkX').onclick=()=>{pv.classList.remove('open');document.body.classList.remove('printing');document.getElementById('ciQ').focus()};
  document.getElementById('tkM').onclick=()=>{TS=Math.max(.6,TS-.1);showTix(p,seatId)};document.getElementById('tkP').onclick=()=>{TS=Math.min(1.4,TS+.1);showTix(p,seatId)}}
 async function go(p){const sel=p.ids.filter(function(id){const c=document.querySelector('.ciSeatC[value="'+id+'"]');return !c||c.checked});closeBub();NOWIRE=false;
