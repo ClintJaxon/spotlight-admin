@@ -590,9 +590,9 @@ body.door #rptOpen,body.door #rptBub{display:none!important}
 .tkt .tbt span:nth-child(3){justify-self:end}#tkPrev{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10001;overflow:auto}#tkPrev.open{display:flex}
 #tkBox{background:#fff8e8;border-radius:20px;padding:22px;width:min(640px,94vw);box-sizing:border-box;text-align:center;margin:auto}
 #tkBox h3{margin:0 0 6px;font-size:22px}#tkBox .sub{font-size:14px;color:#555;margin-bottom:12px}
-#tkList .tkWrap{margin:0 auto 10px;width:576px;max-width:100%;margin:0 auto;overflow:hidden;background:#d8d8d8;padding:12px;box-sizing:border-box;border-radius:8px}
-#tkList .tkSc{width:2.4in;height:1.1in;transform-origin:0 0;outline:1px dashed #888;position:relative}
-#tkList .mg{position:absolute;left:.04in;right:.04in;top:0;height:.9033in;border:1px dotted #f0a;pointer-events:none}#tkList .tkSc>.tkt{position:absolute;left:.04in;top:.02in;margin:0}
+#tkList .tkWrap{margin:0 auto 10px;width:576px;max-width:100%;overflow:hidden;background:#fff;padding:4px;box-sizing:border-box;border-radius:6px;border:1px solid #d9cfae}
+#tkList .tkSc{width:2.32in;height:.9033in;transform-origin:0 0;position:relative}
+#tkList .mg{position:absolute;left:.04in;right:.04in;top:0;height:.9033in;border:1px dotted #f0a;pointer-events:none}#tkList .tkSc>.tkt{position:absolute;left:0;top:0;margin:0}
 #tkBox .row{display:flex;gap:10px;margin-top:14px}#tkBox .row button{flex:1;font-size:22px;font-weight:bold;padding:18px;border:0;border-radius:14px;color:#fff;background:#1f8a3a}
 #tkBox .row button.sec{background:#fff;color:#222;border:2px solid #777;font-size:18px;flex:.5}
 #tkFoot{position:sticky;bottom:0;background:#fff8e8;margin:16px -22px -22px;padding:2px 22px 18px;border-top:2px solid #e3d8ba;border-radius:0 0 20px 20px;z-index:5}
@@ -740,10 +740,10 @@ function masterCanvas(p){
 }
 function doPrint(p){ticket(p);document.body.classList.add("printing");window.print()}
 function showTix(p,seatId){ticket(p);const b=document.getElementById('tkBox'),n=p.ids.length;
- b.innerHTML='<h3>Ticket preview - exactly what the Brother prints</h3>'+(NOWIRE?'<div class="sub" style="color:#a33;font-weight:bold">Check-in was NOT recorded: door check-in is not switched on yet. This is a preview/print only.</div>':'')+'<div class="sub">DK-1209 label, 2.4 x 1.1 in, black only. One ticket per seat'+(n>1?' - this party has '+n+' seats':'')+'. Dashed line = label edge. Pink dotted = printable area.</div><div id="tkList"></div><div id="tkFoot"><div class="adj">Text size <button id="tkM">-</button><b>'+Math.round(TS*100)+'%</b><button id="tkP">+</button></div><div class="row">'+(seatId?'<button id="tkGo1">PRINT TICKET</button>':'')+'<button id="tkGo2">PRINT GROUP TICKETS</button></div><div class="row"><button id="tkGo3">PRINT PARTY TICKET</button><button class="sec" id="tkX">Done</button></div></div>';
+ b.innerHTML='<h3>Ticket preview - exactly what the Brother prints</h3>'+(NOWIRE?'<div class="sub" style="color:#a33;font-weight:bold">Check-in was NOT recorded: door check-in is not switched on yet. This is a preview/print only.</div>':'')+'<div class="sub">DK-1209 label, 2.4 x 1.1 in, black only. One ticket per seat'+(n>1?' - this party has '+n+' seats':'')+'.</div><div id="tkList"></div><div id="tkFoot"><div class="adj">Text size <button id="tkM">-</button><b>'+Math.round(TS*100)+'%</b><button id="tkP">+</button></div><div class="row">'+(seatId?'<button id="tkGo1">PRINT TICKET</button>':'')+'<button id="tkGo2">PRINT GROUP TICKETS</button></div><div class="row"><button id="tkGo3">PRINT PARTY TICKET</button><button class="sec" id="tkX">Done</button></div></div>';
  document.body.classList.add('printing');pv.classList.add('open');const L=document.getElementById('tkList');
  L.innerHTML='';
- Array.from(tk.children).forEach(t=>{const wr=document.createElement('div');wr.className='tkWrap';const sc=document.createElement('div');sc.className='tkSc';sc.innerHTML=t.innerHTML+'<div class="mg"></div>';wr.appendChild(sc);L.appendChild(wr);const k=(wr.clientWidth-24)/(2.4*96);sc.style.transform='scale('+k+')';wr.style.height=(1.1*96*k+24)+'px'});
+ Array.from(tk.children).forEach(t=>{const wr=document.createElement('div');wr.className='tkWrap';const sc=document.createElement('div');sc.className='tkSc';sc.innerHTML=t.innerHTML;wr.appendChild(sc);L.appendChild(wr);const k=(wr.clientWidth-8)/(2.32*96);sc.style.transform='scale('+k+')';wr.style.height=(0.9033*96*k+8)+'px'});
  let _sel=null;
  const _paint=()=>{if(!_sel)return;Array.from(L.children).forEach(function(w,k){const on=_sel.has(p.ids[k]);w.style.opacity=on?'1':'.35';w.style.filter=on?'none':'grayscale(.5)';w.style.cursor='pointer'})};
  if(seatId){_sel=new Set([seatId]);_paint();Array.from(L.children).forEach(function(w,k){w.onclick=()=>{_sel.has(p.ids[k])?_sel.delete(p.ids[k]):_sel.add(p.ids[k]);_paint()}})}
