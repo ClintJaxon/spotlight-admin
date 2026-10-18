@@ -17,9 +17,9 @@ LABEL = "62x29"            # DK-1209 die-cut, 62 mm wide x 29 mm along the feed
 MODEL = "QL-810W"
 DOTS = (696, 271)          # printable dots for 62x29 (brother_ql label table)
 CONF_PATH = os.environ.get("SPOTLIGHT_ENV", os.path.expanduser("~/.spotlight-print.env"))
-MAX_AGE_SEC = 15 * 60      # never print a request older than this (old queue after a reboot)
+MAX_AGE_SEC = 120      # never print a request older than this (old queue after a reboot)
 POLL_SEC = 2
-HB_SEC = 20
+HB_SEC = 5
 
 
 def load_conf():
