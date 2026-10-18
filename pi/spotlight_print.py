@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Spotlight door label printer. v4: full-label height (330 feed dots).
+"""Spotlight door label printer. v5: back to 696x271 - brother_ql hard-validates DK-1209 (62x29) images as exactly (696, 271); 271 dots along the 29mm feed is the hardware printable max.
 
 Watches the Spotlight admin database for print requests and prints each ticket
 on a Brother QL-810W over USB (DK-1209 / 62x29 die-cut labels).
@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 LABEL = "62x29"            # DK-1209 die-cut, 62 mm wide x 29 mm along the feed
 MODEL = "QL-810W"
-DOTS = (696, 330)          # full DK-1209 label: 696 across tape (hardware max), 330 along feed (1.1in)
+DOTS = (696, 271)          # brother_ql spec for label 62x29: 696 across tape, 271 along feed - any other page size is rejected
 CONF_PATH = os.environ.get("SPOTLIGHT_ENV", os.path.expanduser("~/.spotlight-print.env"))
 MAX_AGE_SEC = 120      # never print a request older than this (old queue after a reboot)
 POLL_SEC = 2
@@ -199,7 +199,7 @@ def printer_present():
 def heartbeat(api):
     while True:
         try:
-            v = json.dumps({"v": 4, "at": datetime.datetime.utcnow().isoformat() + "Z", "printed": STATE["printed"],
+            v = json.dumps({"v": 5, "at": datetime.datetime.utcnow().isoformat() + "Z", "printed": STATE["printed"],
                             "err": STATE["err"], "last": STATE["last"], "usb": printer_present()})
             api.put("printer_hb", v)
         except Exception as e:
