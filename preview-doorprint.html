@@ -684,10 +684,11 @@ async function piStatus(){const el=document.getElementById("piStat");if(!el||!LO
   if(!v){PI_STATE="none";el.textContent="Door printer: not set up yet";el.style.color="#a33";return}
   const age=(Date.now()-new Date(v.at).getTime())/1000;
   if(age>90){PI_STATE="offline";el.textContent="Door printer: OFFLINE (last seen "+Math.max(1,Math.round(age/60))+" min ago)";el.style.color="#a33"}
+  else if(v.usb===false){PI_STATE="unplugged";el.textContent="Door printer: UNPLUGGED - check the cable";el.style.color="#a33"}
   else if(v.err){PI_STATE="error";el.textContent="Door printer: last print failed";el.style.color="#a33"}
   else{PI_STATE="ok";el.textContent="Door printer: ready";el.style.color="#1f8a3a"}}catch(e){}}
 setInterval(piStatus,30000);setTimeout(piStatus,4000);
-async function printerSend(p){try{const cvs=tkCanvases(p);if(!cvs.length){toast("No tickets to print");return false}
+async function printerSend(p){await piStatus();if(PI_STATE!=="ok"){toast("Printer can't print right now. Try again when it's online.");return false}try{const cvs=tkCanvases(p);if(!cvs.length){toast("No tickets to print");return false}
   const job={v:1,by:window.ACTOR||"",name:p.name||"",at:new Date().toISOString(),imgs:cvs.map(function(c){return c.toDataURL("image/jpeg",.6)})};
   const key="printjob_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
   const r=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:key,value:JSON.stringify(job)})});
