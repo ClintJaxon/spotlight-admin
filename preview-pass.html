@@ -42,7 +42,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
 #presCard .dot{width:10px;height:10px;border-radius:50%;background:#444;flex:0 0 auto}
 #presCard .dot.on{background:#2ee36a}
 #presCard .dot.off{background:#e04545}
-</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bebas+Neue&family=Pacifico&family=Rye&family=Smokum&family=Yellowtail&display=swap" rel="stylesheet"></head><body>
+</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Diplomata+SC&family=Ewert&family=Hurricane&family=IM+Fell+English&family=IM+Fell+English+SC&family=Lobster&family=Oleo+Script&family=Sancreek&display=swap" rel="stylesheet"></head><body>
 <header><b>SpotLight Dinner Shows - seat map</b><span class="badge" style="background:#8a7a62">Practice season - fake guests only</span>
 <span style="flex:1"></span>
 <span style="display:flex;gap:8px;flex-wrap:nowrap"><button id="vGuest" class="on">Guest view</button><button id="vAdmin">Admin view</button></span></header>
@@ -875,12 +875,34 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
 #fvBar b{font-size:11px;letter-spacing:1px;opacity:.8}
 #fvBar button{border:1px solid #e6c46a;background:none;color:#e6c46a;border-radius:6px;padding:4px 8px;cursor:pointer;font:12px Georgia,serif}
 #fvBar button.on{background:#e6c46a;color:#1d1a16}
-.fv1 #lgBox .lgIn>div:first-child>div:first-child{font-family:'Yellowtail',cursive!important;font-size:22px!important;letter-spacing:1px!important;text-transform:none}
-.fv1 #lgBox .lgIn h2{font-family:'Bebas Neue',sans-serif!important;font-size:38px!important;letter-spacing:4px!important;font-weight:400}
-.fv2 #lgBox .lgIn>div:first-child>div:first-child{font-family:'Pacifico',cursive!important;font-size:19px!important;letter-spacing:1px!important;text-transform:none}
-.fv2 #lgBox .lgIn h2{font-family:'Alfa Slab One',serif!important;font-size:27px!important;letter-spacing:1px!important;font-weight:400}
-.fv3 #lgBox .lgIn>div:first-child>div:first-child{font-family:'Smokum',cursive!important;font-size:15px!important;letter-spacing:2px!important}
-.fv3 #lgBox .lgIn h2{font-family:'Rye',serif!important;font-size:27px!important;letter-spacing:1px!important;font-weight:400}
-@media (orientation:portrait){.fv1 #lgBox .lgIn h2{font-size:30px!important}.fv2 #lgBox .lgIn h2,.fv3 #lgBox .lgIn h2{font-size:22px!important}.fv1 #lgBox .lgIn>div:first-child>div:first-child{font-size:17px!important}.fv2 #lgBox .lgIn>div:first-child>div:first-child{font-size:15px!important}}
-</style><div id="fvBar"><b>FONT PREVIEW</b><button data-v="">Current</button><button data-v="fv1">1 Duo</button><button data-v="fv2">2 Slab</button><button data-v="fv3">3 West</button></div>
+
+.fv1 #lgBox .lgIn>div:first-child>div:first-child{font-family:'Oleo Script',cursive!important;font-size:22px!important;letter-spacing:1px!important;text-transform:none}
+.fv1 #lgBox .lgIn>div:first-child h2{font-family:'Sancreek',cursive!important;font-size:27px!important;letter-spacing:1px!important;font-weight:400}
+.fv1 #lgGo{font-family:'Oleo Script',cursive!important;font-size:21px!important;letter-spacing:1px}
+.fv1 #lgBox .lgIn>div:nth-child(2)>div:first-child{font-family:'IM Fell English',serif!important;font-style:italic;font-size:15px!important}
+.fv1 #lgBox .lgIn>div:nth-child(2) label{font-family:'IM Fell English SC',serif!important;font-size:16px!important}
+.fv1 #lgBox .lgIn>div:nth-child(2) input{font-family:'IM Fell English',serif!important;font-size:16px!important}
+.fv1 #lgBox .lgIn>div:nth-child(2) a{font-family:'IM Fell English',serif!important}
+.fv1 #lgBox .lgIn>div:first-child>div:nth-child(3){font-family:'IM Fell English SC',serif!important;letter-spacing:3px}
+
+.fv2 #lgBox .lgIn>div:first-child>div:first-child{font-family:'Hurricane',cursive!important;font-size:24px!important;letter-spacing:1px!important;text-transform:none}
+.fv2 #lgBox .lgIn>div:first-child h2{font-family:'Diplomata SC',cursive!important;font-size:25px!important;letter-spacing:1px!important;font-weight:400}
+.fv2 #lgGo{font-family:'Hurricane',cursive!important;font-size:21px!important;letter-spacing:1px}
+.fv2 #lgBox .lgIn>div:nth-child(2)>div:first-child{font-family:'IM Fell English',serif!important;font-style:italic;font-size:15px!important}
+.fv2 #lgBox .lgIn>div:nth-child(2) label{font-family:'IM Fell English SC',serif!important;font-size:16px!important}
+.fv2 #lgBox .lgIn>div:nth-child(2) input{font-family:'IM Fell English',serif!important;font-size:16px!important}
+.fv2 #lgBox .lgIn>div:nth-child(2) a{font-family:'IM Fell English',serif!important}
+.fv2 #lgBox .lgIn>div:first-child>div:nth-child(3){font-family:'IM Fell English SC',serif!important;letter-spacing:3px}
+
+.fv3 #lgBox .lgIn>div:first-child>div:first-child{font-family:'Lobster',cursive!important;font-size:22px!important;letter-spacing:1px!important;text-transform:none}
+.fv3 #lgBox .lgIn>div:first-child h2{font-family:'Ewert',cursive!important;font-size:26px!important;letter-spacing:1px!important;font-weight:400}
+.fv3 #lgGo{font-family:'Lobster',cursive!important;font-size:21px!important;letter-spacing:1px}
+.fv3 #lgBox .lgIn>div:nth-child(2)>div:first-child{font-family:'IM Fell English',serif!important;font-style:italic;font-size:15px!important}
+.fv3 #lgBox .lgIn>div:nth-child(2) label{font-family:'IM Fell English SC',serif!important;font-size:16px!important}
+.fv3 #lgBox .lgIn>div:nth-child(2) input{font-family:'IM Fell English',serif!important;font-size:16px!important}
+.fv3 #lgBox .lgIn>div:nth-child(2) a{font-family:'IM Fell English',serif!important}
+.fv3 #lgBox .lgIn>div:first-child>div:nth-child(3){font-family:'IM Fell English SC',serif!important;letter-spacing:3px}
+
+@media (orientation:portrait){.fv1 #lgBox .lgIn>div:first-child h2{font-size:21px!important}.fv2 #lgBox .lgIn>div:first-child h2{font-size:19px!important}.fv3 #lgBox .lgIn>div:first-child h2{font-size:20px!important}.fv1 #lgBox .lgIn>div:first-child>div:first-child{font-size:17px!important}.fv2 #lgBox .lgIn>div:first-child>div:first-child{font-size:19px!important}.fv3 #lgBox .lgIn>div:first-child>div:first-child{font-size:17px!important}.fv1 #lgGo,.fv2 #lgGo,.fv3 #lgGo{font-size:18px!important}}
+</style><div id="fvBar"><b>FONT PREVIEW</b><button data-v="">Current</button><button data-v="fv1">1 Tuscan</button><button data-v="fv2">2 Engraved</button><button data-v="fv3">3 Circus</button></div>
 <script>(function(){var b=document.getElementById('fvBar');b.addEventListener('click',function(e){var v=e.target.getAttribute&&e.target.getAttribute('data-v');if(v===null)return;document.body.className=document.body.className.replace(/fv[123]/g,'').trim();if(v)document.body.className+=' '+v;[].forEach.call(b.querySelectorAll('button'),function(x){x.classList.toggle('on',x.getAttribute('data-v')===v)})})})();</script></body></html>
