@@ -9,7 +9,7 @@ Usage:
   spotlight_print.py --test     print one test label right now (no internet needed)
   spotlight_print.py --dry FILE write the printer data for a PNG to FILE.qlr (no printer needed)
 """
-import base64, io, json, os, sys, time, threading, traceback, datetime, urllib.request, urllib.error, urllib.parse
+import base64, io, json, os, re, sys, time, threading, traceback, datetime, urllib.request, urllib.error, urllib.parse
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -182,11 +182,25 @@ class Api:
 STATE = {"printed": 0, "err": "", "last": ""}
 
 
+def printer_present():
+    # True if the Brother shows up on USB. False only when we can enumerate
+    # USB and the printer is definitely not there (never a false alarm).
+    try:
+        import usb.core
+        vid, pid = 0x04F9, 0x209C
+        m = re.match(r"^usb://(0x[0-9a-fA-F]+|[0-9a-fA-F]+):(0x[0-9a-fA-F]+|[0-9a-fA-F]+)", PRINTER or "")
+        if m:
+            vid, pid = int(m.group(1), 16), int(m.group(2), 16)
+        return usb.core.find(idVendor=vid, idProduct=pid) is not None
+    except Exception:
+        return True
+
+
 def heartbeat(api):
     while True:
         try:
             v = json.dumps({"at": datetime.datetime.utcnow().isoformat() + "Z", "printed": STATE["printed"],
-                            "err": STATE["err"], "last": STATE["last"]})
+                            "err": STATE["err"], "last": STATE["last"], "usb": printer_present()})
             api.put("printer_hb", v)
         except Exception as e:
             log("heartbeat failed:", e)
