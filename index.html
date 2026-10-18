@@ -815,4 +815,18 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
   paintPoster()};
  var _rn=render;render=function(){_rn.apply(this,arguments);paintPoster()};
 })();
+</script><script>
+// Sign out button (header, far right): clears the saved session and returns to the Backstage Access login - the same teardown as the 2-hour inactivity sign-out. One confirm, so a stray tap on the iPad can't sign someone out mid-sale. Visible in every view once signed in; the login overlay covers it when signed out.
+(function(){
+  var h=document.querySelector("header");if(!h)return;
+  var b=document.createElement("button");b.id="signOut";b.textContent="Sign out";
+  b.title="Sign out of this account and go back to the login screen.";
+  b.style.cssText="background:#F8F3E3;color:#1d1a16;border:2px solid #e6c46a;border-radius:8px;padding:8px 14px;font-size:16px;white-space:nowrap";
+  h.appendChild(b);
+  b.onclick=function(){
+    if(!window.confirm("Sign out"+(window.ACTOR?" ("+window.ACTOR+")":"")+"?\n\nYou'll need the email and password to sign back in."))return;
+    TOK=null;RT=null;if(window.__sessClear)window.__sessClear();
+    showLogin("Signed out.")
+  };
+})();
 </script></body></html>
