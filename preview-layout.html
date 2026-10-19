@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Layout preview</title></head><body>
+<script>
+/* PREVIEW ONLY: loads the live admin app and rearranges the toolbar. Nothing here changes the live page. */
+var PATCH=`<style>
+#viewSw{margin-left:0!important}
+#soldB{display:none}
+body:not(.door) #soldB{display:inline-block}
+body.door #posMoveT{display:none!important}
+@media (max-width:640px){
+ #viewSw,#admTools{width:100%;flex-wrap:wrap;gap:5px!important}
+ #viewSw>button,#admTools>button{flex:1 1 0!important;min-width:0!important;padding:8px 2px!important;font-size:12.5px!important;white-space:nowrap;margin:0!important}
+}
+</style>
+<script>
+(function(){
+ var sw=document.getElementById("viewSw"),pm=document.getElementById("posMoveT"),tm=document.getElementById("tmode"),un=document.getElementById("undoB");
+ if(!sw||!pm||!tm||!un)return;
+ pm.style.cssText="padding:8px 12px;font-size:16px;border:2px solid #222;border-radius:8px";
+ sw.appendChild(pm);
+ var s=document.createElement("button");s.id="soldB";s.type="button";s.textContent="Sold out";
+ s.title="Mark this show sold out (preview: not wired up yet)";
+ s.onclick=function(){toast("Preview only - Sold out is not wired up yet")};
+ tm.insertAdjacentElement("afterend",s);
+ var _sv=setView;setView=function(v){_sv(v);pm.style.display=(v==="admin"&&!DOOR)?"":"none"};
+ pm.style.display=(S.view==="admin"&&!DOOR)?"":"none";
+ var b=document.createElement("div");b.style.cssText="position:fixed;top:0;right:0;background:#b00;color:#fff;font:11px system-ui;padding:2px 6px;z-index:99999";b.textContent="LAYOUT PREVIEW";document.body.appendChild(b);
+})();
+<\/script>`;
+fetch("/index.html?cb="+Date.now()).then(function(r){return r.text()}).then(function(t){
+ var i=t.lastIndexOf("</body>");t=t.slice(0,i)+PATCH+t.slice(i);
+ document.open();document.write(t);document.close();
+});
+</script></body></html>
