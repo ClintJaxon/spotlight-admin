@@ -20,7 +20,7 @@ body.door #posMoveT{display:none!important}
  sw.appendChild(pm);
  var s=document.createElement("button");s.id="soldB";s.type="button";s.textContent="Sold Out";
  s.title="Mark this show sold out (preview: asks first, changes nothing yet)";
- s.onclick=function(){var n=document.getElementById("show");var nm=n&&n.options[n.selectedIndex]?n.options[n.selectedIndex].text:"this show";if(!confirm("Mark SOLD OUT?\n\n"+nm+"\n\nGuests will see it as sold out and no new tickets can be sold online. You can turn it back on."))return;toast("Preview only - nothing was changed")};
+ s.onclick=function(){var n=document.getElementById("show");var nm=n&&n.options[n.selectedIndex]?n.options[n.selectedIndex].text:"this show";if(!confirm("Mark SOLD OUT?\\n\\n"+nm+"\\n\\nGuests will see it as sold out and no new tickets can be sold online. You can turn it back on."))return;toast("Preview only - nothing was changed")};
  tm.insertAdjacentElement("afterend",s);
  var _sv=setView;setView=function(v){_sv(v);pm.style.display=(v==="admin"&&!DOOR)?"":"none"};
  pm.style.display=(S.view==="admin"&&!DOOR)?"":"none";
