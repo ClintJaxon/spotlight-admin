@@ -904,6 +904,9 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
   var b=document.createElement("button");b.id="signOut";b.textContent="Sign out";
   b.title="Sign out of this account and go back to the login screen.";
   b.style.cssText="background:#F8F3E3;color:#1d1a16;border:2px solid #e6c46a;border-radius:8px;padding:8px 14px;font-size:16px;white-space:nowrap";
+  var w=document.createElement("a");w.id="mainSite";w.href="https://www.spotlightdinner.com/";w.textContent="Main website";w.title="Go to the public Spotlight Dinner website.";
+  w.style.cssText="background:#F8F3E3;color:#1d1a16;border:2px solid #e6c46a;border-radius:8px;padding:8px 14px;font-size:16px;white-space:nowrap;text-decoration:none;font-family:inherit;line-height:normal;display:inline-block";
+  h.appendChild(w);
   h.appendChild(b);
   b.onclick=function(){
     if(!window.confirm("Sign out"+(window.ACTOR?" ("+window.ACTOR+")":"")+"?\n\nYou'll need the email and password to sign back in."))return;
