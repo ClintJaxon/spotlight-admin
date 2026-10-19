@@ -971,7 +971,7 @@ body:not(.door) #soldB{display:inline-block}
  function snKey(email,name){return email?String(email).toLowerCase():"n:"+String(name||"").toLowerCase()}
  /* door side: Show Notes under the search and on the party card */
  window.__showNote=function(p,small){try{var sh=S.shows[S.show],g=null;for(var i=0;i<p.ids.length&&!g;i++){var x=sh.seats[p.ids[i]];if(x&&x.guest)g=x.guest}
-   var e=SN[snKey(g&&g.email,p.name)]||SN[snKey("",p.name)];if(!e)return"";var parts=[];var bl=bdayLine(e.b);if(bl)parts.push(bl);if(e.t)parts.push(e.t);if(!parts.length)return"";
+   var e=(g&&g.email&&SN[snKey(g.email)])||null;if(!e&&!(g&&g.email)){var nn=String(p.name||"").toLowerCase(),ks=Object.keys(SN);for(var q=0;q<ks.length;q++){if(String(SN[ks[q]].n||"").toLowerCase()===nn){e=SN[ks[q]];break}}}if(!e)return"";var parts=[];var bl=bdayLine(e.b);if(bl)parts.push(bl);if(e.t)parts.push(e.t);if(!parts.length)return"";
    return '<span class="snote">'+(small?"":"Show notes: ")+esc(parts.join(" - "))+"</span>"}catch(err){return""}};
  loadSN();setInterval(loadSN,30000);
  var cust=$("cust");if(!cust)return;
