@@ -75,7 +75,7 @@ header{gap:10px}header b{font-size:18px}header button{padding:8px 12px;font-size
    <div class="row"><button class="pri" id="pay" style="font-size:22px;padding:14px 20px">Check out</button></div></div>
   <div class="small" id="total"></div>
  </div>
- <div class="card admOnly" id="inviteCard" style="margin-top:12px;display:none"><h3>Invite someone</h3><div class="small">They get an email with a code and a link to this page. Admin sees everything. Door sees seating, names and can sell tickets - no customer list, no contact details, no change log.</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><input id="ivEm" type="email" placeholder="Email" style="flex:2;min-width:180px"><input id="ivNm" placeholder="First name" style="flex:1;min-width:100px"><select id="ivRole"><option value="door">POS / Door / Check-In</option><option value="admin">Admin</option></select><button class="pri" id="ivGo">Send invitation</button></div><div id="ivMsg" class="small" style="margin-top:6px"></div></div><div class="card admOnly" style="margin-top:12px;display:none"><h3>Customer list</h3><div style="display:flex;gap:6px;margin:4px 0"><button id="cSortN" class="on" style="padding:6px 10px;border:2px solid #222;border-radius:8px;font-size:14px;cursor:pointer">By last name</button><button id="cSortE" style="padding:6px 10px;border:2px solid #222;border-radius:8px;font-size:14px;cursor:pointer">By last edit</button></div><input id="custQ" type="search" placeholder="Search name, email or phone (e.g. Garth)" style="width:100%;box-sizing:border-box;padding:8px;font-size:15px;margin:4px 0 8px;border:2px solid #222;border-radius:8px"><div style="max-height:200px;overflow:auto"><table id="cust"></table></div>
+ <div class="card admOnly" id="inviteCard" style="margin-top:12px;display:none"><h3>Invite someone</h3><div class="small">They get an email with a code and a link to this page. Admin sees everything. Door sees seating, guest names, phone and email (for search) and can sell tickets - no customer list, no notes, no change log.</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><input id="ivEm" type="email" placeholder="Email" style="flex:2;min-width:180px"><input id="ivNm" placeholder="First name" style="flex:1;min-width:100px"><select id="ivRole"><option value="door">POS / Door / Check-In</option><option value="admin">Admin</option></select><button class="pri" id="ivGo">Send invitation</button></div><div id="ivMsg" class="small" style="margin-top:6px"></div></div><div class="card admOnly" style="margin-top:12px;display:none"><h3>Customer list</h3><div style="display:flex;gap:6px;margin:4px 0"><button id="cSortN" class="on" style="padding:6px 10px;border:2px solid #222;border-radius:8px;font-size:14px;cursor:pointer">By last name</button><button id="cSortE" style="padding:6px 10px;border:2px solid #222;border-radius:8px;font-size:14px;cursor:pointer">By last edit</button></div><input id="custQ" type="search" placeholder="Search name, email or phone (e.g. Garth)" style="width:100%;box-sizing:border-box;padding:8px;font-size:15px;margin:4px 0 8px;border:2px solid #222;border-radius:8px"><div style="max-height:200px;overflow:auto"><table id="cust"></table></div>
   <div class="small">One row per guest (matched by email and name). New shows add to their row.</div></div>
  <div class="card admOnly" style="margin-top:12px;display:none"><h3>Change log</h3><div class="log" id="log"></div></div>
 </aside>
@@ -610,10 +610,10 @@ body.door #rptOpen,body.door #rptBub{display:none!important}
 `;document.head.appendChild(st);
 const sq=x=>x.replace(/(.)\1+/g,"$1"),nrm=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
 const rng=a=>{a=a.slice().sort((x,y)=>x-y);const o=[];let i=0;while(i<a.length){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;o.push(j>i?a[i]+"-"+a[j]:""+a[i]);i=j+1}return o.join(", ")};
-function parties(){const sh=S.shows[S.show],m={};for(const id in sh.seats){const x=sh.seats[id];if(!x||!x.guest||!(x.st==="sold"||x.st==="cash"))continue;const k=x.order||("n:"+x.guest.name);const p=m[k]||(m[k]={order:x.order,name:x.guest.name,phone:x.guest.phone||"",ids:[],tables:{},cash:false,ci:0});p.ids.push(id);const [t,n]=id.split("-");(p.tables[t]=p.tables[t]||[]).push(+n);if(x.st==="cash")p.cash=true;if(x.ci){p.ci=Math.max(p.ci,Date.parse(x.ci)||1);p.ciN=(p.ciN||0)+1}}return Object.values(m)}
+function parties(){const sh=S.shows[S.show],m={};for(const id in sh.seats){const x=sh.seats[id];if(!x||!x.guest||!(x.st==="sold"||x.st==="cash"))continue;const k=x.order||("n:"+x.guest.name);const p=m[k]||(m[k]={order:x.order,name:x.guest.name,phone:x.guest.phone||"",email:x.guest.email||"",ids:[],tables:{},cash:false,ci:0});p.ids.push(id);const [t,n]=id.split("-");(p.tables[t]=p.tables[t]||[]).push(+n);if(x.st==="cash")p.cash=true;if(x.ci){p.ci=Math.max(p.ci,Date.parse(x.ci)||1);p.ciN=(p.ciN||0)+1}}return Object.values(m)}
 const lf=n=>{n=String(n||"").trim();const i=n.lastIndexOf(" ");return i<0?n:n.slice(i+1)+", "+n.slice(0,i)};
 const where=p=>Object.entries(p.tables).map(([t,a])=>(NAME[t]||t)+" ("+t+") seats "+rng(a)).join("; ");
-function hit(p,q){const hay=(lf(p.name)+" "+p.name+" "+(p.order||"")).toLowerCase(),pd=p.phone.replace(/\D/g,""),hs=sq(hay);return q.split(/\s+/).every(t=>hay.includes(t)||hs.includes(sq(t))||(t.replace(/\D/g,"").length>=3&&pd.includes(t.replace(/\D/g,""))))}
+function hit(p,q){const hay=(lf(p.name)+" "+p.name+" "+(p.order||"")+" "+(p.email||"")).toLowerCase(),pd=p.phone.replace(/\D/g,""),hs=sq(hay);return q.split(/\s+/).every(t=>hay.includes(t)||hs.includes(sq(t))||(t.replace(/\D/g,"").length>=3&&pd.includes(t.replace(/\D/g,""))))}
 const tm=ts=>new Date(ts).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
 function renderCI(){const c=document.getElementById("ciCard");if(!c)return;c.style.display=S.view==="guest"?"none":"";if(S.view==="guest")return;const ps=parties();document.getElementById("ciCount").textContent=ps.length?"- "+ps.filter(p=>p.ci).length+" of "+ps.length+" parties in":"";
  const q=nrm(document.getElementById("ciQ").value),res=document.getElementById("ciRes");if(q.length<2){res.innerHTML="";return}
@@ -964,10 +964,11 @@ body:not(.door) #soldB{display:inline-block}
  function bdayLine(b){if(!b)return"";var m=+b.slice(0,2),d=+b.slice(3,5);if(!m||!d)return"";var n=new Date(),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate());
   var best=null;[-1,0,1].forEach(function(y){var x=new Date(n.getFullYear()+y,m-1,d);var diff=Math.round((x-t0)/864e5);if(best===null||Math.abs(diff)<Math.abs(best))best=diff});
   if(best===0)return"Happy Birthday!";if(best>0&&best<=7)return best+(best===1?" day":" days")+" to Happy Birthday";if(best<0&&best>=-7)return"Happy Birthday";return""}
- async function getKey(k){var r=await rq("settings?select=value&key=eq."+k);if(!r.ok)throw new Error("read "+r.status);var j=await r.json();return(j[0]&&j[0].value&&JSON.parse(j[0].value))||{}}
- async function putKey(k,o){var w=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:k,value:JSON.stringify(o)})});if(!w.ok)throw new Error("save "+w.status)}
- async function loadSN(){try{SN=await getKey("show_notes")}catch(e){}}
- async function loadCON(){if(typeof DOOR!=="undefined"&&DOOR)return;try{CON=await getKey("contacts");if(typeof renderCust==="function"&&$("cust"))renderCust()}catch(e){}}
+ async function getTbl(t){var r=await rq(t+"?select=email,data");if(!r.ok)throw new Error("read "+r.status);var j=await r.json(),o={};j.forEach(function(x){o[x.email]=x.data});return o}
+ async function upTbl(t,email,d){var w=await rq(t+"?on_conflict=email",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify([{email:email,data:d,updated_at:new Date().toISOString()}])});if(!w.ok)throw new Error("save "+w.status)}
+ async function delTbl(t,email){var w=await rq(t+"?email=eq."+encodeURIComponent(email),{method:"DELETE"});if(!w.ok)throw new Error("delete "+w.status)}
+ async function loadSN(){try{SN=await getTbl("show_notes")}catch(e){}}
+ async function loadCON(){if(typeof DOOR!=="undefined"&&DOOR)return;try{CON=await getTbl("contacts");if(typeof renderCust==="function"&&$("cust"))renderCust()}catch(e){}}
  function snKey(email,name){return email?String(email).toLowerCase():"n:"+String(name||"").toLowerCase()}
  /* door side: Show Notes under the search and on the party card */
  window.__showNote=function(p,small){try{var sh=S.shows[S.show],g=null;for(var i=0;i<p.ids.length&&!g;i++){var x=sh.seats[p.ids[i]];if(x&&x.guest)g=x.guest}
@@ -1031,12 +1032,12 @@ body:not(.door) #soldB{display:inline-block}
    if(isNew){var g={name:nm,phone:ph.value.trim(),email:email};if(S.cust[ck(g)]){$("pcM").textContent="That name and email are already in the customer list.";return}}
    $("pcSave").disabled=true;$("pcM").style.color="#555";$("pcM").textContent="Saving...";
    try{
-    var cur=await getKey("contacts");var old=cur[key]||{};
+    var old=CON[key]||{};
     var r2={first:isNew?f.value.trim():(old.first||split(c.name)[0]),last:isNew?l.value.trim():(old.last||split(c.name)[1]),phone:isNew?ph.value.trim():(old.phone||c.phone),email:email,addr:$("pcA").value.trim(),city:$("pcC").value.trim(),state:$("pcS").value.trim(),zip:$("pcZ").value.trim(),how:$("pcH").value,bday:bv,cn:$("pcN").value,added:isNew||!!old.added,upd:Date.now()};
-    cur[key]=r2;await putKey("contacts",cur);CON=cur;
-    var sc=await getKey("show_notes");var st=$("pcSN").value.trim();
-    if(st||bv)sc[key]={t:st,b:bv,n:nm};else delete sc[key];
-    await putKey("show_notes",sc);SN=sc;
+    await upTbl("contacts",key,r2);CON[key]=r2;
+    var st=$("pcSN").value.trim();
+    if(st||bv){var sd={t:st,b:bv,n:nm};await upTbl("show_notes",key,sd);SN[key]=sd}else{await delTbl("show_notes",key);delete SN[key]}
+    
     log((isNew?"Contact added: ":"Contact updated: ")+nm);
     if(isNew){S.cust[ck({name:nm,phone:r2.phone,email:email})]={name:nm,phone:r2.phone,email:email,how:r2.how,where:r2.city,shows:{},ed:Date.now()}}
     renderCust();toast(isNew?nm+" added":"Saved "+nm);close()
