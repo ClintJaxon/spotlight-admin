@@ -34,7 +34,7 @@ body.door #posMoveT{display:none!important}
  markUndo=function(){try{UNDO.push(snapState());if(UNDO.length>5)UNDO.shift();var u=document.getElementById("undoB");if(u)u.disabled=false}catch(e){}};
  var b=document.createElement("div");b.style.cssText="position:fixed;top:0;right:0;background:#b00;color:#fff;font:11px system-ui;padding:2px 6px;z-index:99999";b.textContent="LAYOUT PREVIEW";document.body.appendChild(b);
 })();
-<\/script>`;
+<\/script><script src="/preview-contact.js?v=1"><\/script>`;
 fetch("/index.html?cb="+Date.now()).then(function(r){return r.text()}).then(function(t){
  var i=t.lastIndexOf("</body>");t=t.slice(0,i)+PATCH+t.slice(i);
  document.open();document.write(t);document.close();
