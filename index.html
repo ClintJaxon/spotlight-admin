@@ -972,7 +972,7 @@ body:not(.door) #soldB{display:inline-block}
  function snKey(email,name){return email?String(email).toLowerCase():"n:"+String(name||"").toLowerCase()}
  /* door side: Show Notes under the search and on the party card */
  window.__showNote=function(p,small){try{var sh=S.shows[S.show],g=null;for(var i=0;i<p.ids.length&&!g;i++){var x=sh.seats[p.ids[i]];if(x&&x.guest)g=x.guest}
-   var e=(g&&g.email&&SN[snKey(g.email)])||null;if(!e&&!(g&&g.email)){var nn=String(p.name||"").toLowerCase(),ks=Object.keys(SN);for(var q=0;q<ks.length;q++){if(String(SN[ks[q]].n||"").toLowerCase()===nn){e=SN[ks[q]];break}}}if(!e)return"";var parts=[];var bl=bdayLine(e.b);if(bl)parts.push(bl);if(e.t)parts.push(e.t);if(!parts.length)return"";
+   var e=(g&&g.email&&SN[snKey(g.email)])||null;if(!e&&!(g&&g.email)){var nn=String(p.name||"").toLowerCase(),ks=Object.keys(SN);for(var q=0;q<ks.length;q++){if(String(SN[ks[q]].n||"").toLowerCase()===nn){e=SN[ks[q]];break}}}if(!e)return"";var parts=[];var bl=bdayLine(e.b);if(bl)parts.push(bl);var st0=e.s&&e.s[SHOWS[S.show][0]];if(st0)parts.push(st0);if(!parts.length)return"";
    return '<span class="snote">'+(small?"":"Show notes: ")+esc(parts.join(" - "))+"</span>"}catch(err){return""}};
  loadSN();setInterval(loadSN,30000);
  var cust=$("cust");if(!cust)return;
@@ -997,6 +997,9 @@ body:not(.door) #soldB{display:inline-block}
   var isNew=!c,p=isNew?["",""]:split(c.name),ek=isNew?"":c.email.toLowerCase(),rec=isNew?{}:(CON[ek]||{}),sn=isNew?{}:(SN[ek]||{});
   var ords=isNew?[]:orders(c),hasOrd=ords.length>0,lock=!isNew;
   var bm=(rec.bday||sn.b||"").slice(0,2),bd=(rec.bday||sn.b||"").slice(3,5);
+  var snMap=Object.assign({},sn.s||{}),snCur=SHOWS[S.show][0];
+  if(!isNew){for(var si0=0;si0<SHOWS.length;si0++){var sh0=S.shows[si0],has=false;for(var id0 in sh0.seats){var x0=sh0.seats[id0];if(x0&&x0.guest&&ck(x0.guest)===ck(c)){has=true;break}}if(has){snCur=SHOWS[si0][0];break}}}
+  var shOpts=SHOWS.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===snCur?" selected":"")+">"+fmt(s[0])+" - "+esc(s[1])+"</option>"}).join("");
   var mOpts='<option value="">Month</option>'+MON.map(function(m,i){var v=("0"+(i+1)).slice(-2);return '<option value="'+v+'"'+(bm===v?" selected":"")+">"+m+"</option>"}).join("");
   var dOpts='<option value="">Day</option>'+Array.from({length:31},function(_,i){var v=("0"+(i+1)).slice(-2);return '<option value="'+v+'"'+(bd===v?" selected":"")+">"+(i+1)+"</option>"}).join("");
   box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">'+(isNew?"New contact":"Contact card")+'</h3><button id="pcX">Close</button></div>'+
@@ -1011,13 +1014,14 @@ body:not(.door) #soldB{display:inline-block}
    '<div style="margin-top:12px;font-weight:bold">Shows and orders</div>'+
    '<div style="font-size:14px">'+(ords.length?ords.map(function(o){return "<div>"+esc(o)+"</div>"}).join(""):'<span style="color:#777">'+(isNew?"None yet. Shows and orders fill in when they buy seats.":"No seats on file.")+"</span>")+'</div>'+
    '<div class="bub pcCn"><b>Customer Notes</b><small>Admin eyes only (Debbie / Clint). The door never sees this.</small><textarea id="pcN" rows="3" placeholder="Anything worth remembering about this guest...">'+esc(rec.cn||"")+'</textarea></div>'+
-   '<div class="bub pcSn"><b>Show Notes</b><small>The door sees this under the search, e.g. "2 are paying cash, 2 want to pay by CC". A birthday within a week adds a line automatically.</small><textarea id="pcSN" rows="3" placeholder="Instructions for the door...">'+esc(sn.t||"")+'</textarea><div id="pcBL" style="font-weight:bold;color:#0b4fb3;margin-top:4px"></div></div>'+
+   '<div class="bub pcSn"><b>Show Notes</b><small>Debbie and the door see these. Guests never do. Each show has its own note for this customer, e.g. "2 are paying cash, 2 want to pay by CC". A birthday within a week adds a line automatically.</small><select id="pcSH" style="margin-bottom:6px">'+shOpts+'</select><textarea id="pcSN" rows="3" placeholder="Instructions for the door for this show...">'+esc(snMap[snCur]||"")+'</textarea><div id="pcBL" style="font-weight:bold;color:#0b4fb3;margin-top:4px"></div></div>'+
    '<div id="pcM" style="color:#c0392b;min-height:20px;font-size:14px;margin-top:6px"></div>'+
    '<div style="display:flex;gap:8px;margin-top:6px"><button class="pri" id="pcSave">'+(isNew?"Add contact":"Save")+'</button><button id="pcCancel">Cancel</button></div>';
   back.style.display="flex";
   function close(){back.style.display="none"}
   function bl(){var v=$("pcBM").value&&$("pcBD").value?$("pcBM").value+"-"+$("pcBD").value:"";var t=bdayLine(v);$("pcBL").textContent=t?"Door will see: "+t:""}
   $("pcBM").onchange=bl;$("pcBD").onchange=bl;bl();
+  $("pcSH").onchange=function(){snMap[snCur]=$("pcSN").value;snCur=$("pcSH").value;$("pcSN").value=snMap[snCur]||""};
   $("pcX").onclick=close;$("pcCancel").onclick=close;
   $("pcSave").onclick=async function(){
    var f=$("pcF"),l=$("pcL"),ph=$("pcP"),em=$("pcE"),bad=[];
@@ -1035,8 +1039,8 @@ body:not(.door) #soldB{display:inline-block}
     var old=CON[key]||{};
     var r2={first:isNew?f.value.trim():(old.first||split(c.name)[0]),last:isNew?l.value.trim():(old.last||split(c.name)[1]),phone:isNew?ph.value.trim():(old.phone||c.phone),email:email,addr:$("pcA").value.trim(),city:$("pcC").value.trim(),state:$("pcS").value.trim(),zip:$("pcZ").value.trim(),how:$("pcH").value,bday:bv,cn:$("pcN").value,added:isNew||!!old.added,upd:Date.now()};
     await upTbl("contacts",key,r2);CON[key]=r2;
-    var st=$("pcSN").value.trim();
-    if(st||bv){var sd={t:st,b:bv,n:nm};await upTbl("show_notes",key,sd);SN[key]=sd}else{await delTbl("show_notes",key);delete SN[key]}
+    snMap[snCur]=$("pcSN").value;var sm={};Object.keys(snMap).forEach(function(k2){var v2=String(snMap[k2]||"").trim();if(v2)sm[k2]=v2});var st=Object.keys(sm).length?1:0;
+    if(st||bv){var sd={b:bv,n:nm,s:sm};await upTbl("show_notes",key,sd);SN[key]=sd}else{await delTbl("show_notes",key);delete SN[key]}
     
     log((isNew?"Contact added: ":"Contact updated: ")+nm);
     if(isNew){S.cust[ck({name:nm,phone:r2.phone,email:email})]={name:nm,phone:r2.phone,email:email,how:r2.how,where:r2.city,shows:{},ed:Date.now()}}
