@@ -424,10 +424,11 @@ async function applyRole(){try{const u=await(await sfetch(SB+"/auth/v1/user",{he
 /* ---- Staff presence panel: green = active session, red = not logged in ---- */
 var PRES=[];
 function escp(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-(function(){var lc=document.getElementById("log");if(lc){lc=lc.closest(".card");var pc=document.createElement("div");pc.className="card admOnly";pc.id="presCard";pc.style.marginTop="12px";pc.innerHTML="<h3>User log</h3><div id=\"presList\"></div><div class=\"small\" style=\"margin-top:6px;color:var(--mut)\">Everyone who has access, invited or logged in. Green = online now, red = offline or not yet signed in. The X cancels access until you re-invite them.</div>";lc.parentNode.insertBefore(pc,lc.nextSibling)}})();
+(function(){var lc=document.getElementById("log");if(lc){lc=lc.closest(".card");var pc=document.createElement("div");pc.className="card admOnly";pc.id="presCard";pc.style.marginTop="12px";pc.innerHTML="<h3>User log</h3><div id=\"presList\"></div><div class=\"small\" style=\"margin-top:6px;color:var(--mut)\">Everyone who has access, invited or logged in. Green = online now, red = offline or not yet signed in. Pick Door or Admin from the dropdown to change someone's access level (takes effect on their next sign-in). The X cancels access until you re-invite them.</div>";lc.parentNode.insertBefore(pc,lc.nextSibling)}})();
 var INVITES=[];
 async function invitesGet(){try{const r=await rq("settings?select=value&key=eq.invites");const j=await r.json();INVITES=(j[0]&&j[0].value&&JSON.parse(j[0].value))||[]}catch(e){}}
 async function invitesSet(){const r=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"invites",value:JSON.stringify(INVITES)})});if(!r.ok)throw new Error("could not save")}
+function roleOpts(cur){var o="";if(cur!=="door"&&cur!=="admin")o+='<option value="" selected disabled>Set role</option>';o+='<option value="door"'+(cur==="door"?" selected":"")+'>Door</option><option value="admin"'+(cur==="admin"?" selected":"")+'>Admin</option>';return o}
 function renderPres(){var c=document.getElementById("presList");if(!c)return;var now=Date.now();
  var byEm={};INVITES.forEach(function(v){if(v.revoked)return;byEm[v.email]={email:v.email,name:v.name||v.email,role:v.role||"",at:null}});
  PRES.forEach(function(p){var e=byEm[p.id]||(byEm[p.id]={email:p.id,name:p.name||p.id,role:"",at:null});e.at=p.at;if(p.name)e.name=p.name});
@@ -435,12 +436,20 @@ function renderPres(){var c=document.getElementById("presList");if(!c)return;var
  list.sort(function(a,b){var ao=a.at&&(now-new Date(a.at).getTime())<90000?0:1,bo=b.at&&(now-new Date(b.at).getTime())<90000?0:1;return ao-bo||String(a.name).localeCompare(String(b.name))});
  c.innerHTML=list.map(function(p){var on=p.at&&(now-new Date(p.at).getTime())<90000;
   var sub=on?"online now":(p.at?"last login "+new Date(p.at).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"invited - never logged in");
-  return '<div class="prow '+(on?"on":"off")+'"><span class="dot '+(on?"on":"off")+'"></span><div style="flex:1;min-width:0"><b>'+escp(p.name)+'</b> <span style="color:var(--mut);font-size:12px">'+escp(p.email)+'</span><div style="font-size:12px;color:var(--mut)">'+sub+'</div></div><button data-x="'+escp(p.email)+'" title="Cancel this login" style="flex:0 0 auto;border:2px solid #c0392b;color:#c0392b;border-radius:8px;background:#fff;font-size:18px;line-height:1;padding:5px 10px;cursor:pointer">&times;</button></div>'}).join("")}
+  return '<div class="prow '+(on?"on":"off")+'"><span class="dot '+(on?"on":"off")+'"></span><div style="flex:1;min-width:0"><b>'+escp(p.name)+'</b> <span style="color:var(--mut);font-size:12px">'+escp(p.email)+'</span><div style="font-size:12px;color:var(--mut)">'+sub+'</div></div><select data-r="'+escp(p.email)+'" title="Set access level" style="flex:0 0 auto;width:auto;min-width:0;max-width:120px;margin-right:6px;border:2px solid #bbb;border-radius:8px;padding:5px 6px;font-size:13px;background:#fff;cursor:pointer">'+roleOpts(p.role)+'</select><button data-x="'+escp(p.email)+'" title="Cancel this login" style="flex:0 0 auto;border:2px solid #c0392b;color:#c0392b;border-radius:8px;background:#fff;font-size:18px;line-height:1;padding:5px 10px;cursor:pointer">&times;</button></div>'}).join("")}
 document.getElementById("presList").addEventListener("click",async function(e){var b=e.target.closest("[data-x]");if(!b)return;var em=b.getAttribute("data-x");
  if(!window.confirm("Are you sure you want to cancel this login?\n\n"+em+" loses access to the site until they are re-invited."))return;
  try{var v=INVITES.find(function(x){return x.email===em});if(v)v.revoked=true;else INVITES.push({email:em,name:"",role:"",invited_at:new Date().toISOString(),revoked:true});
   await invitesSet();try{await rq("presence?id=eq."+encodeURIComponent(em),{method:"DELETE"})}catch(_){}
   PRES=PRES.filter(function(p){return p.id!==em});log("Cancelled login access for "+em);toast("Access cancelled for "+em);renderPres()}catch(err){toast("Could not cancel: "+err.message)}});
+document.getElementById("presList").addEventListener("change",async function(e){var s=e.target.closest("select[data-r]");if(!s)return;var em=s.getAttribute("data-r"),ro=s.value;
+ var iv=INVITES.find(function(x){return x.email===em});var nm=(iv&&iv.name)||em;
+ if(!window.confirm("Make "+nm+" ("+em+") "+(ro==="admin"?"an Admin?\n\nAdmins can change settings, invite people, and cancel access.":"a Door user?\n\nDoor users can only check people in and print door tickets.")+"\n\nTakes effect on their next sign-in or app refresh (up to about an hour).")){renderPres();return}
+ try{var r=await rq("rpc/set_user_role",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({p_email:em,p_role:ro})});
+  if(!r.ok){var msg="";try{msg=(await r.json()).message||""}catch(_){ }
+   if(r.status===404)throw new Error("the role-change function is not installed on the server yet - Clint needs to approve the small backend update first");
+   throw new Error(msg||("server said "+r.status))}
+  await invitesGet();renderPres();log("Set role for "+em+" to "+ro);toast(nm+" is now "+(ro==="admin"?"an Admin":"a Door user")+" - takes effect on their next sign-in or refresh")}catch(err){toast("Could not change role: "+err.message);renderPres()}});
 async function presTick(){if(!LOGGED){renderPres();return}var id=(window.ACTEM||window.ACTOR||"").toLowerCase();if(!id){renderPres();return}
  try{await rq("presence",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:id,name:window.ACTOR||id,at:new Date().toISOString()})})}catch(e){}
  try{const r=await rq("presence?select=id,name,at&order=name");if(r.ok)PRES=await r.json()}catch(e){}
@@ -858,5 +867,70 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
     showLogin("Signed out.")
   };
 })();
-</script></body></html>
+</script><style id="lay2">
+#viewSw{margin-left:0!important}
+body.door #posMoveT{display:none!important}
+#soldB{display:none}
+body:not(.door) #soldB{display:inline-block}
+#soldB.on{background:#c0392b!important;color:#fff!important;border-color:#c0392b!important}
+#soldBan{background:#c0392b;color:#fff;font-weight:bold;text-align:center;padding:10px;border-radius:8px;margin:8px 0;font-size:17px}
+@media (max-width:640px){
+ #show{max-width:none!important;flex:1 1 calc(100% - 80px)!important;min-width:0!important;width:auto!important}
+ #viewSw,#admTools{width:100%;flex-wrap:wrap;gap:5px!important}
+ #viewSw>button,#admTools>button{flex:1 1 0!important;min-width:0!important;padding:9px 1px!important;font-size:11px!important;letter-spacing:-.2px;white-space:nowrap;margin:0!important}
+}
+</style>
+<script>
+(function(){
+ var sw=document.getElementById("viewSw"),pm=document.getElementById("posMoveT"),tm=document.getElementById("tmode"),un=document.getElementById("undoB");
+ if(!sw||!pm||!tm||!un)return;
+ pm.style.cssText="padding:8px 12px;font-size:16px;border:2px solid #222;border-radius:8px";
+ sw.appendChild(pm);
+ var SOLD=[];
+ function sid(){return (typeof DBSHOW!=="undefined"&&DBSHOW)?DBSHOW[S.show]:undefined}
+ function isSold(){var i=sid();return i!=null&&SOLD.indexOf(i)>=0}
+ function showName(){var n=document.getElementById("show");var o=n&&n.options[n.selectedIndex];return o?(o.dataset.base||o.text):"this show"}
+ var s=document.createElement("button");s.id="soldB";s.type="button";
+ tm.insertAdjacentElement("afterend",s);
+ function paint(){
+  s.textContent=isSold()?"Sold Out: ON":"Sold Out";s.className=isSold()?"on":"";
+  s.title=isSold()?"This show is SOLD OUT. Tap to turn it off.":"Mark this show sold out";
+  var n=document.getElementById("show");
+  if(n&&typeof DBSHOW!=="undefined")for(var k=0;k<n.options.length;k++){var o=n.options[k];if(!o.dataset.base)o.dataset.base=o.text;var d=DBSHOW[+o.value];o.text=o.dataset.base+((d!=null&&SOLD.indexOf(d)>=0)?" - SOLD OUT":"")}
+  var b=document.getElementById("soldBan"),h=document.getElementById("hint");
+  var want=isSold()&&S.view==="guest";
+  if(want&&!b&&h){b=document.createElement("div");b.id="soldBan";b.textContent="SOLD OUT - no more tickets are available for this show.";h.parentNode.insertBefore(b,h)}
+  else if(!want&&b)b.remove();
+ }
+ async function load(){try{var r=await rq("settings?select=value&key=eq.soldout");if(!r.ok)return;var j=await r.json();var a=(j[0]&&j[0].value&&JSON.parse(j[0].value))||[];if(JSON.stringify(a)!==JSON.stringify(SOLD)){SOLD=a;paint()}}catch(e){}}
+ async function save(id,on){
+  var cur=[];try{var r=await rq("settings?select=value&key=eq.soldout");var j=await r.json();cur=(j[0]&&j[0].value&&JSON.parse(j[0].value))||[]}catch(e){throw new Error("could not read the current setting")}
+  cur=cur.filter(function(x){return x!==id});if(on)cur.push(id);
+  var w=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"soldout",value:JSON.stringify(cur)})});
+  if(!w.ok)throw new Error("server said "+w.status);
+  SOLD=cur;
+ }
+ s.onclick=async function(){
+  var id=sid();if(id==null){toast("Show is still loading - try again in a moment");return}
+  var nm=showName(),on=!isSold();
+  var msg=on?"Mark SOLD OUT?\n\n"+nm+"\n\nGuests will see it as sold out and no new tickets can be sold online. Tap Sold Out again any time to turn it back on.":"Turn Sold Out OFF?\n\n"+nm+"\n\nGuests will be able to buy tickets again.";
+  if(!window.confirm(msg))return;
+  try{await save(id,on);log(on?"SOLD OUT turned ON: "+nm:"SOLD OUT turned OFF: "+nm);toast(on?"Marked sold out":"Sold out turned off - tickets can be sold again");paint()}catch(err){toast("Could not change Sold Out: "+err.message)}
+ };
+ var _sc=seatClick;seatClick=function(id,fm){if(S.view==="guest"&&!DOOR&&isSold()){var o=seatState(S.show,id);if(o.st==="avail"){toast("Sorry, this show is sold out.");return}}return _sc(id,fm)};
+ var _r=render;render=function(){var x=_r.apply(this,arguments);try{paint()}catch(e){}return x};
+ var _sv=setView;setView=function(v){_sv(v);pm.style.display=(v==="admin"&&!DOOR)?"":"none";paint()};
+ pm.style.display=(S.view==="admin"&&!DOOR)?"":"none";
+ var nb=document.getElementById("vNames");
+ function fix(){
+  if(pm){var t=pm.textContent;if(/^POS moves/.test(t))pm.textContent=t.replace("POS moves","POS Moves")}
+  if(nb){var want=S.tnames?"Go to Numbers":"Go to Names";if(nb.textContent!==want)nb.textContent=want}
+ }
+ [pm,nb].forEach(function(e){if(e)new MutationObserver(fix).observe(e,{childList:true,characterData:true,subtree:true})});
+ fix();
+ markUndo=function(){try{UNDO.push(snapState());if(UNDO.length>5)UNDO.shift();var u=document.getElementById("undoB");if(u)u.disabled=false}catch(e){}};
+ paint();load();setInterval(load,30000);
+})();
+</script>
+</body></html>
 
