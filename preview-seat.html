@@ -228,12 +228,12 @@ document.getElementById("pay").onclick=()=>{
  log(`Order ${order}: ${S.cart.length} seats for ${g.name} - ${cash?"CASH, held until paid":(ccl4?"paid by PRACTICE test card ending "+ccl4:"paid by card")}`);
  toast(cash?"Seats held. They turn to sold when you confirm the cash.":"Paid (demo). Seats are sold.");const saleOrder=order;S.cart=[];clearForm();if(M.open)closeModal();else render();if(S.view==="admin"&&window.__ci)setTimeout(function(){try{const p2=window.__ci.parties().find(function(q){return q.order===saleOrder});if(p2)window.__ci.openBub(p2)}catch(e){}},300)};
 // ---- admin panel
-function seatBubbles(si,id,s,enc){const xe=q=>String(q).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])),SE=S.shows[si].seats,all=Object.keys(SE).filter(k=>SE[k].order===s.order&&SE[k].guest).sort(),T=id.split("-")[0],pay=k=>SE[k].st==="cash"?"Cash not received":(SE[k].tender==="card"?"Paid by card":"Paid, cash"),ci=k=>SE[k].ci?"Checked in":"Not checked in",ln=k=>"<b>"+k+"</b> - "+pay(k)+" - "+ci(k),oth=all.filter(k=>k!==id),paid=all.filter(k=>SE[k].st!=="cash").length,tn=SE[id].tender==="card"?"Card":"Cash",bub="margin:8px 0;padding:10px 12px;border-radius:10px;line-height:1.5;";
+function seatBubbles(si,id,s,enc){const xe=q=>String(q).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])),SE=S.shows[si].seats,all=Object.keys(SE).filter(k=>SE[k].order===s.order&&SE[k].guest).sort(),T=id.split("-")[0],pay=k=>SE[k].st==="cash"?"Cash not received":(SE[k].tender==="card"?"Paid by card":"Paid, cash"),ci=k=>SE[k].ci?"Checked in":"Not checked in",ln=k=>"Seat: <b>"+xe(k.split("-").pop())+"</b> - "+pay(k)+" - "+ci(k),oth=all.filter(k=>k!==id),paid=all.filter(k=>SE[k].st!=="cash").length,tn=SE[id].tender==="card"?"Card":"Cash",bub="margin:8px 0;padding:10px 12px;border-radius:10px;line-height:1.5;";
 let h="<div style='"+bub+"background:#eaf2ff;border:2px solid #4a78c2'>";
-h+=all.length<2?"Party of 1: "+ln(id):"Seat "+(all.indexOf(id)+1)+" of "+all.length+" in this party: "+ln(id);
-if(oth.length)h+="<div style='margin-top:6px'>Other seats in this party:</div>"+oth.map(k=>"<div style='padding-left:10px'>"+ln(k)+"</div>").join("");
-h+="<div style='margin-top:6px'>Table "+xe(T)+(NAME[T]?" ("+xe(NAME[T])+")":"")+"</div>";
-h+="<div style='margin-top:6px'>Order "+xe(s.order)+" - "+tn+", "+paid+" of "+all.length+" paid"+(enc&&SE[id].tender==="card"?"<div style='font-size:12px;color:#555'>Card details stored encrypted, never shown.</div>":"")+"</div></div>";
+h+="<div><b>Seat "+(all.indexOf(id)+1)+" of "+all.length+" in this party:</b></div><div>"+ln(id)+"</div>";
+if(oth.length)h+="<div style='margin-top:6px'>Other Seats in this Party:</div>"+oth.map(k=>"<div style='padding-left:10px'>"+ln(k)+"</div>").join("");
+h+="<div style='margin-top:6px'>Table: <b>"+(NAME[T]?xe(NAME[T])+" ("+xe(T)+")":xe(T))+"</b></div>";
+h+="<div style='margin-top:6px'>Order "+xe(s.order)+" - <b>"+tn+", "+paid+" of "+all.length+" paid</b>"+(enc&&SE[id].tender==="card"?"<div style='font-size:12px;color:#555'>Card details stored encrypted, never shown.</div>":"")+"</div></div>";
 let nt="";try{const g=s.guest||{},k=window.__SNAPI&&__SNAPI.key(g.email,g.name),e=k&&__SNAPI.get()[k];nt=String(e&&e.s&&e.s[SHOWS[si][0]]||"").trim()}catch(x){}
 h+="<div style='"+bub+"background:#fff6dd;border:2px solid #c98a00'><b>Show notes</b><div>"+(nt?xe(nt).replace(/\n/g,"<br>"):"<span style='color:#777'>None.</span>")+"</div></div>";return h}
 function grp(si,id,s){const SE=S.shows[si].seats,all=Object.keys(SE).filter(k=>SE[k].order===s.order).sort();if(all.length<2)return "Party of 1<br>";const n=all.indexOf(id)+1,oth=all.filter(k=>k!==id),stt=k=>SE[k].ci?"already checked in":(SE[k].st==="cash"?"cash not received":"paid, not checked in yet"),u=[...new Set(oth.map(stt))];return `<b>Seat ${n} of ${all.length}</b> in this party. Other seats: ${u.length===1?oth.join(", ")+" - <b>"+u[0]+"</b>":oth.map(k=>k+" ("+stt(k)+")").join(", ")}<br>`}
@@ -1127,4 +1127,3 @@ body:not(.door) #soldB{display:inline-block}
 })();
 </script>
 </body></html>
-
