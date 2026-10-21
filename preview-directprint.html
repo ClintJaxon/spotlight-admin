@@ -785,15 +785,15 @@ setInterval(piStatus,10000);setTimeout(piStatus,4000);
 async function printerSend(p){if(!paidGate(p)){toast("Payment required before printing.");return false}await piStatus();if(PI_STATE==="none"||PI_STATE==="offline"||PI_STATE==="unplugged"){toast("Printer can't print right now. Try again when it's online.");return false}try{const cvs=tkCanvases(p);if(!cvs.length){toast("No tickets to print");return false}
   const job={v:1,by:window.ACTOR||"",name:p.name||"",at:new Date().toISOString(),imgs:cvs.map(function(c){return c.toDataURL("image/jpeg",.6)})};
   const key="printjob_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
-  window.__lastPrintFail="";const r=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:key,value:JSON.stringify(job)})});
-  if(!r.ok){window.__lastPrintFail="rejected";throw new Error("save failed")}
+  window.__lastPrintFail="";const r=await fetch(SB+"/rest/v1/settings",{method:"POST",headers:Object.assign(hdr(),{Prefer:"resolution=merge-duplicates,return=minimal"}),body:JSON.stringify({key:key,value:JSON.stringify(job)})});
+  if(!r.ok){let seen="?";try{const g=await rq("settings?select=key&key=eq."+key);const gj=await g.json().catch(()=>null);seen=(g.ok&&gj&&gj.length)?"yes":"no"}catch(e2){}window.__lastPrintFail=(seen==="no")?"rejected":"unknown";throw new Error("save failed")}
   toast("Sent "+cvs.length+" ticket"+(cvs.length>1?"s":"")+" to the door printer"+((PI_STATE==="offline"||PI_STATE==="none")?" - it looks OFFLINE. If nothing prints, check the Pi.":""));piStatus();return true}
  catch(e){if(window.__lastPrintFail!=="rejected")window.__lastPrintFail="unknown";toast("Could not send to the door printer - check the Pi and try again");return false}}
 async function printerSendMaster(p){if(!paidGate(p)){toast("Payment required before printing.");return false}await piStatus();if(PI_STATE==="none"||PI_STATE==="offline"||PI_STATE==="unplugged"){toast("Printer can't print right now. Try again when it's online.");return false}try{const cv=masterCanvas(p);if(!cv){toast("No ticket to print");return false}
  const job={v:1,by:window.ACTOR||"",name:(p.name||"")+" (PARTY master x"+p.ids.length+")",at:new Date().toISOString(),imgs:[cv.toDataURL("image/jpeg",.6)]};
  const key="printjob_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
- window.__lastPrintFail="";const r=await rq("settings",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:key,value:JSON.stringify(job)})});
- if(!r.ok){window.__lastPrintFail="rejected";throw new Error("save failed")}
+ window.__lastPrintFail="";const r=await fetch(SB+"/rest/v1/settings",{method:"POST",headers:Object.assign(hdr(),{Prefer:"resolution=merge-duplicates,return=minimal"}),body:JSON.stringify({key:key,value:JSON.stringify(job)})});
+ if(!r.ok){let seen="?";try{const g=await rq("settings?select=key&key=eq."+key);const gj=await g.json().catch(()=>null);seen=(g.ok&&gj&&gj.length)?"yes":"no"}catch(e2){}window.__lastPrintFail=(seen==="no")?"rejected":"unknown";throw new Error("save failed")}
  toast("Sent the party ticket to the door printer");piStatus();return true}
  catch(e){if(window.__lastPrintFail!=="rejected")window.__lastPrintFail="unknown";toast("Could not send to the door printer - check the Pi and try again");return false}}
 function masterCanvas(p){
