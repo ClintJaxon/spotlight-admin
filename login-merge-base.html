@@ -364,20 +364,24 @@ function renderPanel(){const p=document.getElementById("adminPanel");p.style.dis
   const brow=document.createElement("div");brow.style.cssText="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap";
   const cf=document.createElement("button");cf.className="warn";
   const cc=document.createElement("button");cc.className="warn";
-  const paint3=()=>{const sel=selIds(),a2=sel.reduce((t,id)=>t+owed(sh.seats[id]),0),ac=allCash();
-   cf.textContent=sel.length?(ac?("Cancel "+sel.length+" seat"+(sel.length>1?"s":"")+" - hand back $"+a2+" cash"):("Refund $"+a2+" to the card")):"Pick at least one seat";
-   cc.style.display=ac?"none":"";cc.textContent="Hand back $"+a2+" cash instead";
+  const paint3=()=>{const sel=selIds();
+   const paid=sel.filter(id=>{const x=sh.seats[id];return x&&x.st==="sold"}),unpaidN=sel.length-paid.length;
+   const pAmt=paid.reduce((t,id)=>t+owed(sh.seats[id]),0);
+   const cardN=paid.filter(id=>sh.seats[id].tender==="card").length,cashN=paid.length-cardN;
+   const rel=unpaidN?(" + release "+unpaidN+" unpaid - no payment received"):"";
+   cf.textContent=!sel.length?"Pick at least one seat":(!paid.length?("Release "+sel.length+" seat"+(sel.length>1?"s":"")+" - no payment received"):(cardN&&!cashN?("Refund $"+pAmt+" to the card"+rel):(cashN&&!cardN?("Cancel "+sel.length+" seat"+(sel.length>1?"s":"")+" - hand back $"+pAmt+" cash"+rel):("Cancel "+sel.length+" seats - return $"+pAmt+" (cash/card by seat)"+rel))));
+   cc.style.display=(cardN&&!cashN)?"":"none";cc.textContent="Hand back $"+pAmt+" cash instead";
    cf.disabled=cc.disabled=!sel.length};
   pk.querySelectorAll(".rfPickC").forEach(c=>c.addEventListener("change",paint3));
-  cf.onclick=()=>{const sel=selIds();if(!sel.length)return;doRefund(S.sel.show,sel,"order "+o+" ("+sel.length+" of "+ids.length+" seats)",allCash()?"cash":"card")};
+  cf.onclick=()=>{const sel=selIds();if(!sel.length)return;const paid=sel.filter(id=>{const x=sh.seats[id];return x&&x.st==="sold"});const cardN=paid.filter(id=>sh.seats[id].tender==="card").length;const m=!paid.length?"release":(cardN===paid.length?"card":(cardN===0?"cash":"mixed"));doRefund(S.sel.show,sel,"order "+o+" ("+sel.length+" of "+ids.length+" seats)",m)};
   cc.onclick=()=>{const sel=selIds();if(!sel.length)return;doRefund(S.sel.show,sel,"order "+o+" ("+sel.length+" of "+ids.length+" seats)","cash")};
   brow.appendChild(cf);brow.appendChild(cc);pk.appendChild(brow);
   paint3();
   if(rfBtn)rfBtn.insertAdjacentElement("afterend",pk);else b.appendChild(pk);
   setTimeout(()=>{try{pk.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},50)},"warn")}
-function doRefund(si,ids,label,method){if(DOOR)return;markUndo();const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const wasCash=ids.every(id=>{const x=sh.seats[id];return x&&(x.st==="cash"||x.tender!=="card")});
- const amt=ids.reduce((a,id)=>a+owed(sh.seats[id]),0);ids.forEach(id=>{const x=sh.seats[id];touchC(x);if(x&&x.guest){const c=S.cust[ck(x.guest)],d=SHOWS[si][0];if(c&&c.shows[d]){c.shows[d]--;if(c.shows[d]<=0)delete c.shows[d]}}delete sh.seats[id]});
- const how=wasCash?("Cancelled cash "+label+" - cash handed back if taken"):(method==="cash"?("Refunded $"+amt+" in cash at the table - "+label):("Refunded $"+amt+" to card (demo) - "+label));
+function doRefund(si,ids,label,method){if(DOOR)return;markUndo();const sh=S.shows[si];const first=sh.seats[ids[0]];const g=first&&first.guest;const paidIds=ids.filter(id=>{const x=sh.seats[id];return x&&x.st==="sold"});const relN=ids.length-paidIds.length;
+ const amt=paidIds.reduce((a,id)=>a+owed(sh.seats[id]),0);ids.forEach(id=>{const x=sh.seats[id];touchC(x);if(x&&x.guest){const c=S.cust[ck(x.guest)],d=SHOWS[si][0];if(c&&c.shows[d]){c.shows[d]--;if(c.shows[d]<=0)delete c.shows[d]}}delete sh.seats[id]});
+ let how;if(method==="release")how="Released "+label+" - no payment received, no refund due";else if(method==="card")how="Refunded $"+amt+" to card (demo) - "+label;else if(method==="mixed")how="Returned $"+amt+" (cash/card by seat) - "+label;else how="Refunded $"+amt+" in cash at the table - "+label;if(relN&&method!=="release")how+=" + released "+relN+" unpaid seat"+(relN>1?"s":"")+" (no payment received)";
  log(how+(g?" ("+g.name+")":"")+" for "+SHOWS[si][0]+" - seats open again");
  toast(how+". Seats are open again.");S.sel=null;render()}
 // ---- drag & drop (admin)
@@ -467,7 +471,7 @@ async function auth(body,grant){const r=await sfetch(SB+"/auth/v1/token?grant_ty
 setInterval(async()=>{if(!LOGGED||!RT)return;try{await auth({refresh_token:RT},"refresh_token")}catch(e){if(window.__sessClear)window.__sessClear();showLogin("Session ended. Sign in again.")}},45*60*1000);
 function showLogin(msg){LOGGED=false;document.getElementById("lsnd").style.display="";document.getElementById("rs").style.display="none";document.getElementById("lg").style.display="flex";document.getElementById("lgErr").textContent=msg||""}
 async function doLogin(){const pw=document.getElementById("lgPw").value;if(!pw)return;const err=document.getElementById("lgErr");err.textContent="Signing in...";
- try{await auth({email:(document.getElementById("lgEm").value.trim()||EMAIL),password:pw},"password");try{const u=await(await sfetch(SB+"/auth/v1/user",{headers:{apikey:KEY,Authorization:"Bearer "+TOK}})).json();const m=u.user_metadata||{};window.ACTOR=m.name||(u.email||"").split("@")[0]}catch(_){window.ACTOR="staff"}LOGGED=true;await applyRole();document.getElementById("lgPw").value="";await load(true);document.getElementById("lg").style.display="none";err.textContent="";log("Signed in")}
+ try{await auth({email:(document.getElementById("lgEm").value.trim()||EMAIL),password:pw},"password");try{const u=await(await sfetch(SB+"/auth/v1/user",{headers:{apikey:KEY,Authorization:"Bearer "+TOK}})).json();const m=u.user_metadata||{};window.ACTOR=m.name||(u.email||"").split("@")[0]}catch(_){window.ACTOR="staff"}LOGGED=true;await applyRole();document.getElementById("lgPw").value="";await load(true);if(window.__introStop)window.__introStop();document.getElementById("lg").style.display="none";err.textContent="";log("Signed in")}
  catch(e){err.textContent=/invalid/i.test(e.message)?"Wrong password.":"Could not sign in: "+e.message}}
 document.getElementById("lgFg").onclick=e=>{e.preventDefault();document.getElementById("rs").style.display="block";document.getElementById("lsnd").style.display="none";document.getElementById("bub").classList.remove("on");document.getElementById("rs").scrollIntoView({block:"center",behavior:"smooth"})};
 const rsm=t=>document.getElementById("rsMsg").textContent=t;
@@ -909,7 +913,7 @@ const _sv=setView;setView=function(){_sv.apply(this,arguments);renderCI()};rende
       TOK=s.t;RT=s.r;
       try{await auth({refresh_token:RT},"refresh_token")}catch(e){window.__sessClear();return}
       try{const u=await(await sfetch(SB+"/auth/v1/user",{headers:{apikey:KEY,Authorization:"Bearer "+TOK}})).json();const m=u.user_metadata||{};window.ACTOR=m.name||(u.email||"").split("@")[0]}catch(_){}
-      LOGGED=true;await applyRole();await load(true);document.getElementById("lg").style.display="none";log("Session restored");
+      LOGGED=true;await applyRole();await load(true);if(window.__introStop)window.__introStop();document.getElementById("lg").style.display="none";log("Session restored");
       if(window.__armOut)window.__armOut();
     }catch(e){}
   })();
@@ -1204,6 +1208,7 @@ W.style.transform="rotate("+(Math.sin(t*5)*1.6).toFixed(2)+"deg) scale("+(1+.02*
 if(C.type==="jaw")Bi.style.transform="translateY("+(v*3*C.sh/C.h).toFixed(2)+"%)";else M.style.transform="scale("+(1+.7*v).toFixed(2)+","+(1+2.2*v).toFixed(2)+")";
 if(t<C.env.length*STEP+.15)raf=requestAnimationFrame(frame);else{W.style.transform="";Bi.style.transform="";M.style.transform="";CHR.classList.remove("on")}}
 function stop(){tm.forEach(clearTimeout);tm=[];cancelAnimationFrame(raf);if(aud){try{aud.pause()}catch(e){}aud=null}}
+window.__introStop=stop;
 function play(i,sound){stop();place(CH[i]);cur=i;CHR.classList.add("on");BUB.classList.add("on");
 tm.push(setTimeout(function(){t0=performance.now();if(sound&&C.voice){aud=new Audio(C.voice);var st=false,go=function(){if(st)return;st=true;raf=requestAnimationFrame(frame)};aud.play().then(go).catch(function(){aud=null;go()});tm.push(setTimeout(go,700))}else{raf=requestAnimationFrame(frame)}},450));
 tm.push(setTimeout(function(){BUB.classList.remove("on")},450+C.env.length*STEP*1000+350))}
