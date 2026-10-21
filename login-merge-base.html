@@ -856,7 +856,9 @@ async function go(p,kind){const sel=p.ids.filter(function(id){const c=document.q
  if(!sel.length){toast("Pick at least one ticket to print.");document.getElementById("ciQ").value="";renderCI();return}
  if(kind==="party"&&!paidGate(p)){toast("Collect the cash first");return}const need=sel.filter(function(id){const x=S.shows[S.show].seats[id];return x&&!x.ci}),tb={};sel.forEach(function(id){const pr=id.split("-"),t=pr.slice(0,-1).join("-");(tb[t]=tb[t]||[]).push(+pr[pr.length-1])});const p2=Object.assign({},p,{ids:sel,tables:tb});
  if(need.length){const ok=await mark(Object.assign({},p,{ids:need}),true);if(ok==="nowire"){document.getElementById("ciQ").value="";document.getElementById("ciRes").innerHTML="";renderCI();if(kind==="only")return;afterGo(p,kind);return}if(ok===false){document.getElementById("ciQ").value="";renderCI();return}}
- document.getElementById("ciQ").value="";document.getElementById("ciRes").innerHTML="";renderCI();if(kind==="only"){toast("Checked in - no tickets printed");return}afterGo(p,kind)}
+ document.getElementById("ciQ").value="";document.getElementById("ciRes").innerHTML="";renderCI();if(kind==="only"){toast("Checked in - no tickets printed");return}
+ if(!need.length&&kind!=="party"){const ok2=await printerSend(p2);if(!ok2)toast("Nothing printed - use Reprint ticket on a seat for the preview screen.");return}
+ afterGo(p,kind)}
 async function afterGo(p,kind){if(kind==="party"){const ok=await printerSendMaster(p);if(!ok)toast("Checked in, but the party ticket did NOT print - open the party and tap Reprint.");return}showTix(p)}
 async function undo(p){closeBub();const sh=S.shows[S.show];if(p.ids.some(i=>sh.seats[i]&&sh.seats[i].ovr)){p.ids.forEach(i=>{if(sh.seats[i])delete sh.seats[i].ovr});log("Override cleared: check-in undone for "+p.name)}await mark(p,false);renderCI()}
 document.getElementById("ciQ").addEventListener("input",renderCI);
